@@ -416,6 +416,12 @@ int main(int argc, char** argv) {
 
 	// normal exit from processing loop, set result to result of attestation
 	result = attestation_rc;
+   
+
+// TEST AREA {BEGIN}
+	
+
+// TEST AREA {END}
 
 	/* wait until next attestation */
 	// TODO enable periodic attestations
@@ -684,12 +690,20 @@ static coap_response_t coap_attest_handler(
 			attest_struct.attested.quote.pcrDigest.buffer,
 			"                                              0x", "\n", false);
 
+        charra_log_info("[" LOG_NAME "] < %s >", reference_pcr_file_path);
+        charra_log_info("[" LOG_NAME "] < %s >", tpm_pcr_selection);
+        charra_log_info("[" LOG_NAME "] < %d >", tpm_pcr_selection_len);
+        charra_log_info("[" LOG_NAME "] < %s >", &attest_struct);
+
+
 		CHARRA_RC pcr_check =
 			charra_check_pcr_digest_against_reference(reference_pcr_file_path,
 				tpm_pcr_selection, tpm_pcr_selection_len, &attest_struct);
 		if (pcr_check == CHARRA_RC_SUCCESS) {
 			charra_log_info(
 				"[" LOG_NAME "]     => PCR composite digest is valid!");
+			charra_log_info("[" LOG_NAME "]     => PCR composite digest is valid! %s", pcr_check);
+
 			attestation_result_pcrs = true;
 		} else {
 			charra_log_error(
@@ -739,6 +753,9 @@ static coap_response_t coap_attest_handler(
 							  attestation_result_nonce &&
 							  attestation_result_pcrs && attestation_event_log;
 
+
+    charra_log_info("[" LOG_NAME "] ATTESTEATION RESULT IS %d",attestation_result); 
+
 	/* print attestation result */
 	charra_log_info("[" LOG_NAME "] +----------------------------+");
 	if (attestation_result) {
@@ -749,6 +766,26 @@ static coap_response_t coap_attest_handler(
 		charra_log_info("[" LOG_NAME "] |     ATTESTATION FAILED     |");
 	}
 	charra_log_info("[" LOG_NAME "] +----------------------------+");
+
+// TEST BLOCK
+	/* new CoAP request PDU */
+	charra_log_info("[" LOG_NAME "] Creating request PDU.");
+	if ((pdu = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
+			 COAP_REQUEST_POST, &coap_options, req_buf, req_buf_len)) ==
+		NULL) {
+		charra_log_error("[" LOG_NAME "] Cannot create request PDU.");
+		result = CHARRA_RC_ERROR;
+		goto cleanup;
+	}
+
+	// charra_log_info("[" LOG_NAME "] Sending NEW CoAP message = %zu ", sent);
+	// if ((coap_send_large(session, sent)) == COAP_INVALID_MID) {
+	// 	charra_log_error("[" LOG_NAME "] Cannot send CoAP message.");
+	// }
+
+// TEST BLOCK {END}
+
+	return attestation_result;
 
 cleanup:
 	/* flush handles */

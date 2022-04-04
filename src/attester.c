@@ -89,6 +89,12 @@ static void coap_attest_handler(struct coap_context_t* ctx,
 	struct coap_pdu_t* in_pdu, struct coap_binary_t* token,
 	struct coap_string_t* query, struct coap_pdu_t* out_pdu);
 
+// static void coap_attest_recieve_handler(struct coap_context_t* ctx,
+// 	struct coap_resource_t* resource, struct coap_session_t* session,
+// 	struct coap_pdu_t* in_pdu, struct coap_binary_t* token,
+// 	struct coap_string_t* query, struct coap_pdu_t* out_pdu);
+
+
 /* --- main --------------------------------------------------------------- */
 
 int main(int argc, char** argv) {
@@ -249,6 +255,11 @@ int main(int argc, char** argv) {
 	charra_coap_add_resource(
 		coap_context, COAP_REQUEST_FETCH, "attest", coap_attest_handler);
 
+
+	charra_log_info("[" LOG_NAME "] Registering CoAP ATTESTED resources.");
+	charra_coap_add_resource(
+		coap_context, COAP_REQUEST_POST, "ATTESTED", coap_attest_recieve_handler);
+
 	/* enter main loop */
 	charra_log_debug("[" LOG_NAME "] Entering main loop.");
 	while (!quit) {
@@ -283,6 +294,20 @@ static void release_data(
 	struct coap_session_t* session CHARRA_UNUSED, void* app_ptr) {
 	charra_free_and_null(app_ptr);
 }
+
+static void coap_attest_recieve_handler(struct coap_context_t* ctx CHARRA_UNUSED,
+	struct coap_resource_t* resource, struct coap_session_t* session,
+	struct coap_binary_t* token, struct coap_string_t* query) {
+	// CHARRA_RC charra_r = CHARRA_RC_SUCCESS;
+	// int coap_r = 0;
+	// TSS2_RC tss_r = 0;
+	// ESYS_TR sig_key_handle = ESYS_TR_NONE;
+	// TPM2B_PUBLIC* public_key = NULL;
+
+	charra_log_info(
+		"[" LOG_NAME "] Resource '%s': Received message.", "ATTESTED");
+	}
+
 
 static void coap_attest_handler(struct coap_context_t* ctx CHARRA_UNUSED,
 	struct coap_resource_t* resource, struct coap_session_t* session,
