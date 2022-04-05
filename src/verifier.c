@@ -52,7 +52,7 @@ static bool processing_response = false;
 static CHARRA_RC attestation_rc = CHARRA_RC_ERROR;
 
 /* logging */
-#define LOG_NAME "verifier"
+#define LOG_NAME "verifier (client)"
 coap_log_t coap_log_level = LOG_INFO;
 // #define LOG_LEVEL_CBOR LOG_DEBUG
 charra_log_t charra_log_level = CHARRA_LOG_INFO;
@@ -286,7 +286,7 @@ int main(int argc, char** argv) {
 			result = CHARRA_RC_ERROR;
 			goto cleanup;
 		}
-	} else {
+	} else {    /* CRIA UM ENDPOINT (coap_context, &addr, coap_protocol) */
 		charra_log_info(
 			"[" LOG_NAME "] Creating CoAP client session using UDP.");
 		if ((coap_session = charra_coap_new_client_session(
@@ -416,6 +416,10 @@ int main(int argc, char** argv) {
 
 	// normal exit from processing loop, set result to result of attestation
 	result = attestation_rc;
+
+	charra_log_info("[" LOG_NAME "] RESULTADO = %d", result);
+
+ /* aqui que tem que enviar o resultado (result) para o attester */
    
 
 // TEST AREA {BEGIN}
@@ -769,14 +773,14 @@ static coap_response_t coap_attest_handler(
 
 // TEST BLOCK
 	/* new CoAP request PDU */
-	charra_log_info("[" LOG_NAME "] Creating request PDU.");
-	if ((pdu = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
-			 COAP_REQUEST_POST, &coap_options, req_buf, req_buf_len)) ==
-		NULL) {
-		charra_log_error("[" LOG_NAME "] Cannot create request PDU.");
-		result = CHARRA_RC_ERROR;
-		goto cleanup;
-	}
+	// charra_log_info("[" LOG_NAME "] Creating request PDU.");
+	// if ((pdu = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
+	// 		 COAP_REQUEST_POST, &coap_options, req_buf, req_buf_len)) ==
+	// 	NULL) {
+	// 	charra_log_error("[" LOG_NAME "] Cannot create request PDU.");
+	// 	result = CHARRA_RC_ERROR;
+	// 	goto cleanup;
+	// }
 
 	// charra_log_info("[" LOG_NAME "] Sending NEW CoAP message = %zu ", sent);
 	// if ((coap_send_large(session, sent)) == COAP_INVALID_MID) {
@@ -785,7 +789,6 @@ static coap_response_t coap_attest_handler(
 
 // TEST BLOCK {END}
 
-	return attestation_result;
 
 cleanup:
 	/* flush handles */
