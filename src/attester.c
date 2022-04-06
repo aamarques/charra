@@ -254,8 +254,7 @@ int main(int argc, char** argv) {
 	/* REGISTRA NOVO RECURSO E NOVO HANDLER */
 	charra_log_info("[" LOG_NAME "] Registering CoAP ATTESTED resources.");
 	charra_coap_add_resource(
-//	 	coap_context, COAP_REQUEST_POST, "result", coap_attest_result_handler);
- 	 	coap_context, COAP_REQUEST_POST, "result", coap_attest_handler);
+ 	 	coap_context, COAP_REQUEST_FETCH, "result", coap_attest_handler);
 
 
 	/* enter main loop */

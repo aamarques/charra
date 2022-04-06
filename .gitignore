@@ -15,4 +15,5 @@ obj/*
 .vscode/
 
 # git cred
-setgit.sh
+commit.sh
+

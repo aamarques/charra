@@ -101,6 +101,8 @@ static void handle_sigint(int signum);
 static CHARRA_RC create_attestation_request(
 	msg_attestation_request_dto* attestation_request);
 
+static CHARRA_RC create_attestation_result ();
+
 static coap_response_t coap_attest_handler(struct coap_context_t* context,
 	coap_session_t* session, coap_pdu_t* sent, coap_pdu_t* received,
 	const coap_mid_t mid);
@@ -251,6 +253,7 @@ int main(int argc, char** argv) {
 	/* register CoAP response handler */
 	charra_log_info("[" LOG_NAME "] Registering CoAP response handler.");
 	coap_register_response_handler(coap_context, coap_attest_handler);
+	
 
 	if (use_dtls_psk) {
 		charra_log_info(
@@ -317,16 +320,6 @@ int main(int argc, char** argv) {
 		goto cleanup;
 	}
 
-	/* enter  periodic attestation loop */
-	// TODO enable periodic attestations
-	// charra_log_info("[" LOG_NAME "] Entering periodic attestation loop.");
-	// while (!quit) {
-	// 	/* cleanup */
-	// 	memset(&req, 0, sizeof(req));
-	// 	if (coap_options != NULL) {
-	// 		coap_delete_optlist(coap_options);
-	// 		coap_options = NULL;
-	// 	}
 
 	/* create attestation request */
 	charra_log_info("[" LOG_NAME "] Creating attestation request.");
@@ -422,9 +415,181 @@ int main(int argc, char** argv) {
  /* aqui que tem que enviar o resultado (result) para o attester */
    
 
-// TEST AREA {BEGIN}
-	
+// *****************************************************************************************
+//  TEST AREA {BEGIN}
 
+	charra_log_info("[" LOG_NAME "]");
+	charra_log_info("[" LOG_NAME "] ****************************************");
+	charra_log_info("[" LOG_NAME "] SENT ATTESTATION RESULT BACK TO ATTESTER");
+	if (use_dtls_psk) {
+		charra_log_info(
+			"[" LOG_NAME "] Creating CoAP client session using DTLS with PSK.");
+		if ((coap_session = charra_coap_new_client_session_psk(coap_context,
+				 dst_host, dst_port, COAP_PROTO_DTLS, dtls_psk_identity,
+				 (uint8_t*)dtls_psk_key, strlen(dtls_psk_key))) == NULL) {
+			charra_log_error(
+				"[" LOG_NAME
+				"] Cannot create client session based on DTLS-PSK.");
+			result = CHARRA_RC_ERROR;
+			goto cleanup;
+		}
+	} else if (use_dtls_rpk) {
+		charra_log_info(
+			"[" LOG_NAME "] Creating CoAP client session using DTLS-RPK.");
+		coap_dtls_pki_t dtls_pki = {0};
+
+		result = charra_coap_setup_dtls_pki_for_rpk(&dtls_pki,
+			dtls_rpk_private_key_path, dtls_rpk_public_key_path,
+			dtls_rpk_peer_public_key_path, dtls_rpk_verify_peer_public_key);
+		if (result != CHARRA_RC_SUCCESS) {
+			charra_log_error(
+				"[" LOG_NAME "] Error while setting up DTLS-RPK structure.");
+			goto cleanup;
+		}
+
+		if ((coap_session = charra_coap_new_client_session_pki(coap_context,
+				 dst_host, dst_port, COAP_PROTO_DTLS, &dtls_pki)) == NULL) {
+			charra_log_error(
+				"[" LOG_NAME
+				"] Cannot create client session based on DTLS-RPK.");
+			result = CHARRA_RC_ERROR;
+			goto cleanup;
+		}
+	} else {    /* CRIA UM ENDPOINT (coap_context, &addr, coap_protocol) */
+		charra_log_info(
+			"[" LOG_NAME "] Creating CoAP client session using UDP.");
+		if ((coap_session = charra_coap_new_client_session(
+				 coap_context, dst_host, dst_port, COAP_PROTO_UDP)) == NULL) {
+			charra_log_error(
+				"[" LOG_NAME "] Cannot create client session based on UDP.");
+			result = CHARRA_RC_COAP_ERROR;
+			goto cleanup;
+		}
+	}
+
+	/* define needed variables */
+	msg_attestation_request_dto req2 = {0};
+	uint32_t req_buf_len2 = 0;
+	coap_pdu_t* pdu2 = NULL;
+	coap_mid_t mid2 = COAP_INVALID_MID;
+	int coap_io_process_time2 = -1;
+
+	/* create CoAP option for content type */
+	uint8_t coap_mediatype_cbor_buf2[4] = {0};
+	unsigned int coap_mediatype_cbor_buf_len2 = 0;
+	if ((coap_mediatype_cbor_buf_len2 = coap_encode_var_safe(
+			 coap_mediatype_cbor_buf2, sizeof(coap_mediatype_cbor_buf2),
+			 COAP_MEDIATYPE_APPLICATION_CBOR)) == 0) {
+		charra_log_error(
+			"[" LOG_NAME "] Cannot create option for CONTENT_TYPE.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+
+	/* create attestation request */
+	charra_log_info("[" LOG_NAME "] Creating attestation request.");
+	if ((result = create_attestation_request(&req)) != CHARRA_RC_SUCCESS) {
+		charra_log_error("[" LOG_NAME "] Cannot create attestation request.");
+		goto cleanup;
+	} else {
+		/* store request data */
+		last_request = req2;
+	}
+
+	// /* marshal attestation request */
+	charra_log_info(
+		"[" LOG_NAME "] Marshaling attestation request data to CBOR.");
+	if ((result = charra_marshal_attestation_request(
+			 &req2, &req_buf_len2, &req_buf)) != CHARRA_RC_SUCCESS) {
+		charra_log_error(
+			"[" LOG_NAME "] Marshaling attestation request data failed.");
+		goto cleanup;
+	}
+
+	/* create CoAP context */
+
+	charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
+	if ((coap_context = charra_coap_new_context(true)) == NULL) {
+		charra_log_error("[" LOG_NAME "] Cannot create CoAP context.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+
+	/* register CoAP response handler */
+	charra_log_info("[" LOG_NAME "] Registering CoAP response handler.");
+	coap_register_response_handler(coap_context, create_attestation_result);
+	
+	// coap_delete_optlist(&coap_options)
+	
+	coap_optlist_t* coap_options2 = NULL;
+
+	/* CoAP options */
+	charra_log_info("[" LOG_NAME "] Adding CoAP option URI_PATH.");
+	if (coap_insert_optlist(
+			&coap_options2, coap_new_optlist(COAP_OPTION_URI_PATH, 6,
+							   (const uint8_t*)"result")) != 1) {
+		charra_log_error("[" LOG_NAME "] Cannot add CoAP option URI_PATH.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+	charra_log_info("[" LOG_NAME "] Adding CoAP option CONTENT_TYPE.");
+	if (coap_insert_optlist(&coap_options2,
+			coap_new_optlist(COAP_OPTION_CONTENT_TYPE,
+				coap_mediatype_cbor_buf_len2, coap_mediatype_cbor_buf2)) != 1) {
+		charra_log_error("[" LOG_NAME "] Cannot add CoAP option CONTENT_TYPE.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+
+	/* new CoAP request PDU */
+	charra_log_info("[" LOG_NAME "] Creating request PDU. ");
+	if ((pdu2 = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
+			 COAP_REQUEST_FETCH, &coap_options2, req_buf, req_buf_len)) ==
+		NULL) {
+		charra_log_error("[" LOG_NAME "] Cannot create request PDU.");
+		result = CHARRA_RC_ERROR;
+		goto cleanup;
+	}
+
+	/* set timeout length */
+	coap_fixed_point_t coap_timeout2 = {attestation_response_timeout, 0};
+	coap_session_set_ack_timeout(coap_session, coap_timeout2);
+
+	/* send CoAP PDU */
+	charra_log_info("[" LOG_NAME "] Sending CoAP message.");
+	if ((mid2 = coap_send_large(coap_session, pdu2)) == COAP_INVALID_MID) {
+		charra_log_error("[" LOG_NAME "] Cannot send CoAP message.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+
+	/* processing and waiting for response */
+	charra_log_info("[" LOG_NAME "] Processing and waiting for response ...");
+	uint16_t response_wait_time2 = 0;
+	while (!processing_response && !coap_can_exit(coap_context)) {
+		/* process CoAP I/O */
+		if ((coap_io_process_time = coap_io_process(
+				 coap_context, COAP_IO_PROCESS_TIME_MS)) == -1) {
+			charra_log_error(
+				"[" LOG_NAME "] Error during CoAP I/O processing.");
+			result = CHARRA_RC_COAP_ERROR;
+			goto cleanup;
+		}
+		/* This wait time is not 100% accurate, it only includes the elapsed
+		 * time inside the coap_io_process function. But should be good enough.
+		 */
+		response_wait_time2 += coap_io_process_time2;
+		if (response_wait_time >= (attestation_response_timeout * 1000)) {
+			charra_log_error("[" LOG_NAME
+							 "] Timeout after %d ms while waiting for or "
+							 "processing attestation response.",
+				response_wait_time);
+			result = CHARRA_RC_TIMEOUT;
+			goto cleanup;
+		}
+	}
+	
+// *****************************************************************************************
 // TEST AREA {END}
 
 	/* wait until next attestation */
@@ -453,6 +618,10 @@ cleanup:
 /* --- function definitions ----------------------------------------------- */
 
 static void handle_sigint(int signum CHARRA_UNUSED) { quit = true; }
+
+static CHARRA_RC create_attestation_result() {
+	charra_log_info ("[" LOG_NAME "]***** Running result Handler *****");
+}
 
 static CHARRA_RC create_attestation_request(
 	msg_attestation_request_dto* attestation_request) {
@@ -770,24 +939,6 @@ static coap_response_t coap_attest_handler(
 		charra_log_info("[" LOG_NAME "] |     ATTESTATION FAILED     |");
 	}
 	charra_log_info("[" LOG_NAME "] +----------------------------+");
-
-// TEST BLOCK
-	/* new CoAP request PDU */
-	// charra_log_info("[" LOG_NAME "] Creating request PDU.");
-	// if ((pdu = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
-	// 		 COAP_REQUEST_POST, &coap_options, req_buf, req_buf_len)) ==
-	// 	NULL) {
-	// 	charra_log_error("[" LOG_NAME "] Cannot create request PDU.");
-	// 	result = CHARRA_RC_ERROR;
-	// 	goto cleanup;
-	// }
-
-	// charra_log_info("[" LOG_NAME "] Sending NEW CoAP message = %zu ", sent);
-	// if ((coap_send_large(session, sent)) == COAP_INVALID_MID) {
-	// 	charra_log_error("[" LOG_NAME "] Cannot send CoAP message.");
-	// }
-
-// TEST BLOCK {END}
 
 
 cleanup:
