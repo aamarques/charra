@@ -84,6 +84,8 @@ static void handle_sigint(int signum);
 static void release_data(
 	struct coap_session_t* session CHARRA_UNUSED, void* app_ptr);
 
+static void coap_attest_received();
+
 static void coap_attest_handler(struct coap_context_t* ctx,
 	struct coap_resource_t* resource, struct coap_session_t* session,
 	struct coap_pdu_t* in_pdu, struct coap_binary_t* token,
@@ -254,7 +256,7 @@ int main(int argc, char** argv) {
 	/* REGISTRA NOVO RECURSO E NOVO HANDLER */
 	charra_log_info("[" LOG_NAME "] Registering CoAP ATTESTED resources.");
 	charra_coap_add_resource(
- 	 	coap_context, COAP_REQUEST_FETCH, "result", coap_attest_handler);
+ 	 	coap_context, COAP_REQUEST_FETCH, "result", coap_attest_received);
 
 
 	/* enter main loop */
@@ -292,6 +294,9 @@ static void release_data(
 	charra_free_and_null(app_ptr);
 }
 
+static void coap_attest_received() {
+	charra_log_info("[" LOG_NAME "] ATTESTATION RECEIVED.");
+}
 
 
 static void coap_attest_handler(struct coap_context_t* ctx CHARRA_UNUSED,
