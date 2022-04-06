@@ -101,7 +101,7 @@ static void handle_sigint(int signum);
 static CHARRA_RC create_attestation_request(
 	msg_attestation_request_dto* attestation_request);
 
-static CHARRA_RC create_attestation_result ();
+static CHARRA_RC create_attestation_result();
 
 static coap_response_t coap_attest_handler(struct coap_context_t* context,
 	coap_session_t* session, coap_pdu_t* sent, coap_pdu_t* received,
@@ -421,6 +421,7 @@ int main(int argc, char** argv) {
 	charra_log_info("[" LOG_NAME "]");
 	charra_log_info("[" LOG_NAME "] ****************************************");
 	charra_log_info("[" LOG_NAME "] SENT ATTESTATION RESULT BACK TO ATTESTER");
+
 	if (use_dtls_psk) {
 		charra_log_info(
 			"[" LOG_NAME "] Creating CoAP client session using DTLS with PSK.");
@@ -472,7 +473,7 @@ int main(int argc, char** argv) {
 	uint32_t req_buf_len2 = 0;
 	coap_pdu_t* pdu2 = NULL;
 	coap_mid_t mid2 = COAP_INVALID_MID;
-	int coap_io_process_time2 = -1;
+	// int coap_io_process_time2 = -1;
 
 	/* create CoAP option for content type */
 	uint8_t coap_mediatype_cbor_buf2[4] = {0};
@@ -488,7 +489,7 @@ int main(int argc, char** argv) {
 
 	/* create attestation request */
 	charra_log_info("[" LOG_NAME "] Creating attestation request.");
-	if ((result = create_attestation_request(&req)) != CHARRA_RC_SUCCESS) {
+	if ((result = create_attestation_result(&req2)) != CHARRA_RC_SUCCESS) {
 		charra_log_error("[" LOG_NAME "] Cannot create attestation request.");
 		goto cleanup;
 	} else {
@@ -563,31 +564,31 @@ int main(int argc, char** argv) {
 		goto cleanup;
 	}
 
-	/* processing and waiting for response */
-	charra_log_info("[" LOG_NAME "] Processing and waiting for response ...");
-	uint16_t response_wait_time2 = 0;
-	while (!processing_response && !coap_can_exit(coap_context)) {
-		/* process CoAP I/O */
-		if ((coap_io_process_time = coap_io_process(
-				 coap_context, COAP_IO_PROCESS_TIME_MS)) == -1) {
-			charra_log_error(
-				"[" LOG_NAME "] Error during CoAP I/O processing.");
-			result = CHARRA_RC_COAP_ERROR;
-			goto cleanup;
-		}
-		/* This wait time is not 100% accurate, it only includes the elapsed
-		 * time inside the coap_io_process function. But should be good enough.
-		 */
-		response_wait_time2 += coap_io_process_time2;
-		if (response_wait_time >= (attestation_response_timeout * 1000)) {
-			charra_log_error("[" LOG_NAME
-							 "] Timeout after %d ms while waiting for or "
-							 "processing attestation response.",
-				response_wait_time);
-			result = CHARRA_RC_TIMEOUT;
-			goto cleanup;
-		}
-	}
+	// /* processing and waiting for response */
+	// charra_log_info("[" LOG_NAME "] Processing and waiting for response ...");
+	// uint16_t response_wait_time2 = 0;
+	// while (!processing_response && !coap_can_exit(coap_context)) {
+	// 	/* process CoAP I/O */
+	// 	if ((coap_io_process_time = coap_io_process(
+	// 			 coap_context, COAP_IO_PROCESS_TIME_MS)) == -1) {
+	// 		charra_log_error(
+	// 			"[" LOG_NAME "] Error during CoAP I/O processing.");
+	// 		result = CHARRA_RC_COAP_ERROR;
+	// 		goto cleanup;
+	// 	}
+	// 	/* This wait time is not 100% accurate, it only includes the elapsed
+	// 	 * time inside the coap_io_process function. But should be good enough.
+	// 	 */
+	// 	response_wait_time2 += coap_io_process_time2;
+	// 	if (response_wait_time >= (attestation_response_timeout * 1000)) {
+	// 		charra_log_error("[" LOG_NAME
+	// 						 "] Timeout after %d ms while waiting for or "
+	// 						 "processing attestation response.",
+	// 			response_wait_time);
+	// 		result = CHARRA_RC_TIMEOUT;
+	// 		goto cleanup;
+	// 	}
+	// }
 	
 // *****************************************************************************************
 // TEST AREA {END}
@@ -619,8 +620,36 @@ cleanup:
 
 static void handle_sigint(int signum CHARRA_UNUSED) { quit = true; }
 
-static CHARRA_RC create_attestation_result() {
+static CHARRA_RC create_attestation_result(msg_attestation_request_dto* attestation_request2) {
 	charra_log_info ("[" LOG_NAME "]***** Running result Handler *****");
+
+	
+	/* build attestation request */
+	msg_attestation_request_dto req2 = {
+		.hello = false,
+		.sig_key_id_len = TPM_SIG_KEY_ID_LEN,
+		.sig_key_id = {0}, // must be memcpy'd, see below
+//		.nonce_len = nonce_len,
+//		.nonce = {0}, // must be memcpy'd, see below
+//		.pcr_selections_len = 1,
+//		.pcr_selections = {{
+//			.tcg_hash_alg_id = TPM2_ALG_SHA256,
+//			.pcrs_len = tpm_pcr_selection_len,
+//			.pcrs = {0} // must be memcpy'd, see below
+//		}},
+		.event_log_path_len =
+			(use_ima_event_log) ? strlen(ima_event_log_path) : 0,
+		.event_log_path =
+			(use_ima_event_log) ? (uint8_t*)ima_event_log_path : NULL,
+	};
+//	memcpy(req.sig_key_id, TPM_SIG_KEY_ID, TPM_SIG_KEY_ID_LEN);
+//	memcpy(req.nonce, nonce, nonce_len);
+//	memcpy(req.pcr_selections->pcrs, tpm_pcr_selection, tpm_pcr_selection_len);
+
+	/* set output param(s) */
+	*attestation_request2 = req2;
+
+	return CHARRA_RC_SUCCESS;
 }
 
 static CHARRA_RC create_attestation_request(
