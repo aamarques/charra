@@ -101,7 +101,7 @@ typedef struct {
 typedef struct {
 	bool attestation;
 	struct msg_attestation_response_dto{} attestation_response;
-} msg_attestation_result_passport_dto;
+} msg_attestation_appraise_result_dto;
 
 // typedef struct {
 // 	bool attestation;

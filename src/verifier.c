@@ -101,7 +101,7 @@ static void handle_sigint(int signum);
 static CHARRA_RC create_attestation_request(
 	msg_attestation_request_dto* attestation_request);
 
-static CHARRA_RC create_attestation_result_passport(
+static CHARRA_RC create_appraisal_result(
 	msg_attestation_response_dto* att_response);
 
 static coap_response_t coap_attest_handler(struct coap_context_t* context,
@@ -112,7 +112,7 @@ static coap_response_t coap_attest_handler(struct coap_context_t* context,
 
 static msg_attestation_request_dto last_request = {0};
 static msg_attestation_response_dto last_response = {0};
-static msg_attestation_result_passport_dto last_passport_result = {0};
+static msg_attestation_appraise_result_dto last_passport_result = {0};
 
 /* --- main --------------------------------------------------------------- */
 
@@ -420,12 +420,10 @@ int main(int argc, char** argv) {
 // *****************************************************************************************
 //  TEST AREA {BEGIN}
 
-	charra_log_info("[" LOG_NAME "]");
-	charra_log_info("[" LOG_NAME "] ****************************************");
-	charra_log_info("[" LOG_NAME "] SEND ATTESTATION RESULT BACK TO ATTESTER");
-
 	/* define needed variables */
-	msg_attestation_result_passport_dto att_result= {0};
+	msg_attestation_appraise_result_dto att_result= {0};
+	att_result = last_passport_result;
+
 	uint32_t req_buf_len2 = 0;
 	coap_pdu_t* pdu2 = NULL;
 	coap_mid_t mid2 = COAP_INVALID_MID;
@@ -446,7 +444,7 @@ int main(int argc, char** argv) {
 	
 	// /* create attestation request */
 	// charra_log_info("[" LOG_NAME "] Creating attestation request.");
-	// if ((result = create_attestation_result_passport(&att_res)) != CHARRA_RC_SUCCESS) {
+	// if ((result = create_appraisal_result(&att_res)) != CHARRA_RC_SUCCESS) {
 	// 	charra_log_error("[" LOG_NAME "] Cannot create attestation request.");
 	// 	goto cleanup;
 	// } else {
@@ -456,15 +454,14 @@ int main(int argc, char** argv) {
 
 	// /* marshal attestation request */
 	charra_log_info(
-		"[" LOG_NAME "] Marshaling attestation passport data to CBOR.");
+		"[" LOG_NAME "] Marshaling attestation appraisal result data to CBOR.");
 	if ((result = charra_marshal_attestation_passport(
 			 &att_result, &req_buf_len2, &req_buf)) != CHARRA_RC_SUCCESS) {
 		charra_log_error(
-			"[" LOG_NAME "] Marshaling attestation passport data failed.");
+			"[" LOG_NAME "] Marshaling attestation appraisal result data failed.");
 		goto cleanup;
 	}
 
-    charra_log_info("XPTO %zu", result);
 	/* create CoAP context */
 
 	charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
@@ -602,11 +599,11 @@ static CHARRA_RC create_attestation_request(
 }
 
 // PASSPORT MODEL
-static CHARRA_RC create_attestation_result_passport(msg_attestation_response_dto* att_response ) {
-	charra_log_info ("[" LOG_NAME "]***** Running result Handler *****");
+static CHARRA_RC create_appraisal_result(msg_attestation_response_dto* att_response ) {
+	charra_log_info ("[" LOG_NAME "]***** Creating Appraisal Struct *****");
 	// CHARRA_RC err = CHARRA_RC_ERROR;
 
-  	msg_attestation_result_passport_dto att_result = {
+  	msg_attestation_appraise_result_dto att_result = {
 		.attestation = true,
 		.attestation_response = { att_response },
 		};
@@ -872,13 +869,16 @@ static coap_response_t coap_attest_handler(
 	if (attestation_result) {
 		attestation_rc = CHARRA_RC_SUCCESS;
 		charra_log_info("[" LOG_NAME "] |   ATTESTATION SUCCESSFUL   |");
-		create_attestation_result_passport(&res);
 	} else {
 		attestation_rc = CHARRA_RC_VERIFICATION_FAILED;
 		charra_log_info("[" LOG_NAME "] |     ATTESTATION FAILED     |");
 	}
 	charra_log_info("[" LOG_NAME "] +----------------------------+");
 
+// I know this is not the best practice, but.... :)
+	if (attestation_result) {
+		create_appraisal_result(&res);
+	} 
 
 cleanup:
 	/* flush handles */
