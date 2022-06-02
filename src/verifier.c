@@ -112,7 +112,7 @@ static coap_response_t coap_attest_handler(struct coap_context_t* context,
 
 static msg_attestation_request_dto last_request = {0};
 static msg_attestation_response_dto last_response = {0};
-static msg_attestation_result_passport_dto last_result = {0};
+static msg_attestation_result_passport_dto last_passport_result = {0};
 
 /* --- main --------------------------------------------------------------- */
 
@@ -425,7 +425,7 @@ int main(int argc, char** argv) {
 	charra_log_info("[" LOG_NAME "] SEND ATTESTATION RESULT BACK TO ATTESTER");
 
 	/* define needed variables */
-	msg_attestation_result_passport_dto att_res = {0};
+	msg_attestation_result_passport_dto att_result= {0};
 	uint32_t req_buf_len2 = 0;
 	coap_pdu_t* pdu2 = NULL;
 	coap_mid_t mid2 = COAP_INVALID_MID;
@@ -458,7 +458,7 @@ int main(int argc, char** argv) {
 	charra_log_info(
 		"[" LOG_NAME "] Marshaling attestation passport data to CBOR.");
 	if ((result = charra_marshal_attestation_passport(
-			 &att_res, &req_buf_len2, &req_buf)) != CHARRA_RC_SUCCESS) {
+			 &att_result, &req_buf_len2, &req_buf)) != CHARRA_RC_SUCCESS) {
 		charra_log_error(
 			"[" LOG_NAME "] Marshaling attestation passport data failed.");
 		goto cleanup;
@@ -606,13 +606,13 @@ static CHARRA_RC create_attestation_result_passport(msg_attestation_response_dto
 	charra_log_info ("[" LOG_NAME "]***** Running result Handler *****");
 	// CHARRA_RC err = CHARRA_RC_ERROR;
 
-  	msg_attestation_result_passport_dto att_res = {
+  	msg_attestation_result_passport_dto att_result = {
 		.attestation = true,
-		.attestation_response =  att_response,
-	  };
+		.attestation_response = { att_response },
+		};
 
 	/* set output param(s) */
-	// *attestation_result = att_res;
+	last_passport_result = att_result;
 
 	return CHARRA_RC_SUCCESS;
 }
