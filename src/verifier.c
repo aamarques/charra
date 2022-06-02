@@ -52,7 +52,7 @@ static bool processing_response = false;
 static CHARRA_RC attestation_rc = CHARRA_RC_ERROR;
 
 /* logging */
-#define LOG_NAME "verifier (client)"
+#define LOG_NAME "verifier"
 coap_log_t coap_log_level = LOG_INFO;
 // #define LOG_LEVEL_CBOR LOG_DEBUG
 charra_log_t charra_log_level = CHARRA_LOG_INFO;
@@ -101,7 +101,8 @@ static void handle_sigint(int signum);
 static CHARRA_RC create_attestation_request(
 	msg_attestation_request_dto* attestation_request);
 
-static CHARRA_RC create_attestation_result();
+static CHARRA_RC create_attestation_result_passport(
+	msg_attestation_response_dto* att_response);
 
 static coap_response_t coap_attest_handler(struct coap_context_t* context,
 	coap_session_t* session, coap_pdu_t* sent, coap_pdu_t* received,
@@ -111,6 +112,7 @@ static coap_response_t coap_attest_handler(struct coap_context_t* context,
 
 static msg_attestation_request_dto last_request = {0};
 static msg_attestation_response_dto last_response = {0};
+static msg_attestation_result_passport_dto last_result = {0};
 
 /* --- main --------------------------------------------------------------- */
 
@@ -410,66 +412,20 @@ int main(int argc, char** argv) {
 	// normal exit from processing loop, set result to result of attestation
 	result = attestation_rc;
 
-	charra_log_info("[" LOG_NAME "] RESULTADO = %d", result);
+     
+	charra_log_info("[" LOG_NAME "] attestation_rc = %d", result);
 
  /* aqui que tem que enviar o resultado (result) para o attester */
-   
-
+  
 // *****************************************************************************************
 //  TEST AREA {BEGIN}
 
 	charra_log_info("[" LOG_NAME "]");
 	charra_log_info("[" LOG_NAME "] ****************************************");
-	charra_log_info("[" LOG_NAME "] SENT ATTESTATION RESULT BACK TO ATTESTER");
-
-	if (use_dtls_psk) {
-		charra_log_info(
-			"[" LOG_NAME "] Creating CoAP client session using DTLS with PSK.");
-		if ((coap_session = charra_coap_new_client_session_psk(coap_context,
-				 dst_host, dst_port, COAP_PROTO_DTLS, dtls_psk_identity,
-				 (uint8_t*)dtls_psk_key, strlen(dtls_psk_key))) == NULL) {
-			charra_log_error(
-				"[" LOG_NAME
-				"] Cannot create client session based on DTLS-PSK.");
-			result = CHARRA_RC_ERROR;
-			goto cleanup;
-		}
-	} else if (use_dtls_rpk) {
-		charra_log_info(
-			"[" LOG_NAME "] Creating CoAP client session using DTLS-RPK.");
-		coap_dtls_pki_t dtls_pki = {0};
-
-		result = charra_coap_setup_dtls_pki_for_rpk(&dtls_pki,
-			dtls_rpk_private_key_path, dtls_rpk_public_key_path,
-			dtls_rpk_peer_public_key_path, dtls_rpk_verify_peer_public_key);
-		if (result != CHARRA_RC_SUCCESS) {
-			charra_log_error(
-				"[" LOG_NAME "] Error while setting up DTLS-RPK structure.");
-			goto cleanup;
-		}
-
-		if ((coap_session = charra_coap_new_client_session_pki(coap_context,
-				 dst_host, dst_port, COAP_PROTO_DTLS, &dtls_pki)) == NULL) {
-			charra_log_error(
-				"[" LOG_NAME
-				"] Cannot create client session based on DTLS-RPK.");
-			result = CHARRA_RC_ERROR;
-			goto cleanup;
-		}
-	} else {    /* CRIA UM ENDPOINT (coap_context, &addr, coap_protocol) */
-		charra_log_info(
-			"[" LOG_NAME "] Creating CoAP client session using UDP.");
-		if ((coap_session = charra_coap_new_client_session(
-				 coap_context, dst_host, dst_port, COAP_PROTO_UDP)) == NULL) {
-			charra_log_error(
-				"[" LOG_NAME "] Cannot create client session based on UDP.");
-			result = CHARRA_RC_COAP_ERROR;
-			goto cleanup;
-		}
-	}
+	charra_log_info("[" LOG_NAME "] SEND ATTESTATION RESULT BACK TO ATTESTER");
 
 	/* define needed variables */
-	msg_attestation_request_dto req2 = {0};
+	msg_attestation_result_passport_dto att_res = {0};
 	uint32_t req_buf_len2 = 0;
 	coap_pdu_t* pdu2 = NULL;
 	coap_mid_t mid2 = COAP_INVALID_MID;
@@ -487,26 +443,28 @@ int main(int argc, char** argv) {
 		goto cleanup;
 	}
 
-	/* create attestation request */
-	charra_log_info("[" LOG_NAME "] Creating attestation request.");
-	if ((result = create_attestation_result(&req2)) != CHARRA_RC_SUCCESS) {
-		charra_log_error("[" LOG_NAME "] Cannot create attestation request.");
-		goto cleanup;
-	} else {
-		/* store request data */
-		last_request = req2;
-	}
+	
+	// /* create attestation request */
+	// charra_log_info("[" LOG_NAME "] Creating attestation request.");
+	// if ((result = create_attestation_result_passport(&att_res)) != CHARRA_RC_SUCCESS) {
+	// 	charra_log_error("[" LOG_NAME "] Cannot create attestation request.");
+	// 	goto cleanup;
+	// } else {
+	// 	/* store request data */
+	// 	last_request2 = att_res;
+	// }
 
 	// /* marshal attestation request */
 	charra_log_info(
-		"[" LOG_NAME "] Marshaling attestation request data to CBOR.");
-	if ((result = charra_marshal_attestation_request(
-			 &req2, &req_buf_len2, &req_buf)) != CHARRA_RC_SUCCESS) {
+		"[" LOG_NAME "] Marshaling attestation passport data to CBOR.");
+	if ((result = charra_marshal_attestation_passport(
+			 &att_res, &req_buf_len2, &req_buf)) != CHARRA_RC_SUCCESS) {
 		charra_log_error(
-			"[" LOG_NAME "] Marshaling attestation request data failed.");
+			"[" LOG_NAME "] Marshaling attestation passport data failed.");
 		goto cleanup;
 	}
 
+    charra_log_info("XPTO %zu", result);
 	/* create CoAP context */
 
 	charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
@@ -516,12 +474,6 @@ int main(int argc, char** argv) {
 		goto cleanup;
 	}
 
-	/* register CoAP response handler */
-	charra_log_info("[" LOG_NAME "] Registering CoAP response handler.");
-	coap_register_response_handler(coap_context, create_attestation_result);
-	
-	// coap_delete_optlist(&coap_options)
-	
 	coap_optlist_t* coap_options2 = NULL;
 
 	/* CoAP options */
@@ -563,32 +515,6 @@ int main(int argc, char** argv) {
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
-
-	// /* processing and waiting for response */
-	// charra_log_info("[" LOG_NAME "] Processing and waiting for response ...");
-	// uint16_t response_wait_time2 = 0;
-	// while (!processing_response && !coap_can_exit(coap_context)) {
-	// 	/* process CoAP I/O */
-	// 	if ((coap_io_process_time = coap_io_process(
-	// 			 coap_context, COAP_IO_PROCESS_TIME_MS)) == -1) {
-	// 		charra_log_error(
-	// 			"[" LOG_NAME "] Error during CoAP I/O processing.");
-	// 		result = CHARRA_RC_COAP_ERROR;
-	// 		goto cleanup;
-	// 	}
-	// 	/* This wait time is not 100% accurate, it only includes the elapsed
-	// 	 * time inside the coap_io_process function. But should be good enough.
-	// 	 */
-	// 	response_wait_time2 += coap_io_process_time2;
-	// 	if (response_wait_time >= (attestation_response_timeout * 1000)) {
-	// 		charra_log_error("[" LOG_NAME
-	// 						 "] Timeout after %d ms while waiting for or "
-	// 						 "processing attestation response.",
-	// 			response_wait_time);
-	// 		result = CHARRA_RC_TIMEOUT;
-	// 		goto cleanup;
-	// 	}
-	// }
 	
 // *****************************************************************************************
 // TEST AREA {END}
@@ -620,37 +546,7 @@ cleanup:
 
 static void handle_sigint(int signum CHARRA_UNUSED) { quit = true; }
 
-static CHARRA_RC create_attestation_result(msg_attestation_request_dto* attestation_request2) {
-	charra_log_info ("[" LOG_NAME "]***** Running result Handler *****");
 
-	
-	/* build attestation request */
-	msg_attestation_request_dto req2 = {
-		.hello = false,
-		.sig_key_id_len = TPM_SIG_KEY_ID_LEN,
-		.sig_key_id = {0}, // must be memcpy'd, see below
-//		.nonce_len = nonce_len,
-//		.nonce = {0}, // must be memcpy'd, see below
-//		.pcr_selections_len = 1,
-//		.pcr_selections = {{
-//			.tcg_hash_alg_id = TPM2_ALG_SHA256,
-//			.pcrs_len = tpm_pcr_selection_len,
-//			.pcrs = {0} // must be memcpy'd, see below
-//		}},
-		.event_log_path_len =
-			(use_ima_event_log) ? strlen(ima_event_log_path) : 0,
-		.event_log_path =
-			(use_ima_event_log) ? (uint8_t*)ima_event_log_path : NULL,
-	};
-//	memcpy(req.sig_key_id, TPM_SIG_KEY_ID, TPM_SIG_KEY_ID_LEN);
-//	memcpy(req.nonce, nonce, nonce_len);
-//	memcpy(req.pcr_selections->pcrs, tpm_pcr_selection, tpm_pcr_selection_len);
-
-	/* set output param(s) */
-	*attestation_request2 = req2;
-
-	return CHARRA_RC_SUCCESS;
-}
 
 static CHARRA_RC create_attestation_request(
 	msg_attestation_request_dto* attestation_request) {
@@ -696,12 +592,28 @@ static CHARRA_RC create_attestation_request(
 	};
 	memcpy(req.sig_key_id, TPM_SIG_KEY_ID, TPM_SIG_KEY_ID_LEN);
 	memcpy(req.nonce, nonce, nonce_len);
-	memcpy(req.pcr_selections->pcrs, tpm_pcr_selection, tpm_pcr_selection_len);
+	memcpy(req.pcr_selections->pcrs, tpm_pcr_selection, tpm_pcr_selection_len);  // this is the array in the begining
 
 	/* set output param(s) */
 	*attestation_request = req;
 
 	/* return result */
+	return CHARRA_RC_SUCCESS;
+}
+
+// PASSPORT MODEL
+static CHARRA_RC create_attestation_result_passport(msg_attestation_response_dto* att_response ) {
+	charra_log_info ("[" LOG_NAME "]***** Running result Handler *****");
+	// CHARRA_RC err = CHARRA_RC_ERROR;
+
+  	msg_attestation_result_passport_dto att_res = {
+		.attestation = true,
+		.attestation_response =  att_response,
+	  };
+
+	/* set output param(s) */
+	// *attestation_result = att_res;
+
 	return CHARRA_RC_SUCCESS;
 }
 
@@ -892,9 +804,6 @@ static coap_response_t coap_attest_handler(
 			attest_struct.attested.quote.pcrDigest.buffer,
 			"                                              0x", "\n", false);
 
-        charra_log_info("[" LOG_NAME "] < %s >", reference_pcr_file_path);
-        charra_log_info("[" LOG_NAME "] < %s >", tpm_pcr_selection);
-        charra_log_info("[" LOG_NAME "] < %d >", tpm_pcr_selection_len);
         charra_log_info("[" LOG_NAME "] < %s >", &attest_struct);
 
 
@@ -955,14 +864,15 @@ static coap_response_t coap_attest_handler(
 							  attestation_result_nonce &&
 							  attestation_result_pcrs && attestation_event_log;
 
-
-    charra_log_info("[" LOG_NAME "] ATTESTEATION RESULT IS %d",attestation_result); 
-
+	if (attestation_result) {
+    	charra_log_info("[" LOG_NAME "] ATTESTEATION RESULT IS TRUE"); 
+	}
 	/* print attestation result */
 	charra_log_info("[" LOG_NAME "] +----------------------------+");
 	if (attestation_result) {
 		attestation_rc = CHARRA_RC_SUCCESS;
 		charra_log_info("[" LOG_NAME "] |   ATTESTATION SUCCESSFUL   |");
+		create_attestation_result_passport(&res);
 	} else {
 		attestation_rc = CHARRA_RC_VERIFICATION_FAILED;
 		charra_log_info("[" LOG_NAME "] |     ATTESTATION FAILED     |");

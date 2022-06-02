@@ -97,4 +97,23 @@ typedef struct {
 	uint8_t* event_log;
 } msg_attestation_response_dto;
 
+
+typedef struct {
+	bool attestation;
+	struct msg_attestation_response_dto{} attestation_response;
+} msg_attestation_result_passport_dto;
+
+// typedef struct {
+// 	bool attestation;
+// 	size_t sig_key_id_len;
+// 	uint8_t sig_key_id[SIG_KEY_ID_MAXLEN];
+// 	size_t nonce_len;
+// 	uint8_t nonce[sizeof(TPMU_HA)];
+// 	uint32_t pcr_selections_len;
+// 	pcr_selection_dto pcr_selections[TPM2_NUM_PCR_BANKS];
+// 	uint32_t event_log_path_len;
+// 	uint8_t* event_log_path;
+// } msg_attestation_result_passport_dto;
+
+
 #endif /* CHARRA_DTO_H */

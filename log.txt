@@ -1,0 +1,222 @@
+make: Nothing to be done for 'all'.
+10:51:51 [DEBUG] src/attester.c:143 [attester] Attester Configuration:
+10:51:51 [DEBUG] src/attester.c:144 [attester]     Used local port: 5683
+10:51:51 [DEBUG] src/attester.c:145 [attester]     DTLS-PSK enabled: false
+10:51:51 [DEBUG] src/attester.c:153 [attester]     DTLS-RPK enabled: false
+10:51:51 [INFO] src/attester.c:189 [attester] Initializing CoAP in block-wise mode.
+10:51:51 [INFO] src/attester.c:240 [attester] Creating CoAP server endpoint using UDP.
+Apr 21 10:51:51.399 DEBG created UDP  endpoint 0.0.0.0:5683
+10:51:51 [INFO] src/attester.c:252 [attester] Registering CoAP resources.
+10:51:51 [INFO] src/util/coap_util.c:192 [coap-util] Adding CoAP FETCH resource 'attest'.
+10:51:51 [INFO] src/attester.c:257 [attester] Registering CoAP ATTESTED resources.
+10:51:51 [INFO] src/util/coap_util.c:192 [coap-util] Adding CoAP FETCH resource 'result'.
+10:51:51 [DEBUG] src/attester.c:263 [attester] Entering main loop.
+
+
+10:51:51 [DEBUG] src/verifier.c:174 [verifier] Verifier Configuration:
+10:51:51 [DEBUG] src/verifier.c:175 [verifier]     Destination port: 5683
+10:51:51 [DEBUG] src/verifier.c:176 [verifier]     Destination host: 127.0.0.1
+10:51:51 [DEBUG] src/verifier.c:177 [verifier]     Timeout when waiting for attestation response: 30s
+10:51:51 [DEBUG] src/verifier.c:180 [verifier]     Reference PCR file path: 'reference-pcrs.txt'
+10:51:51 [DEBUG] src/verifier.c:182 [verifier]     PCR selection with length 9:
+                                                      0, 1, 2, 3, 4, 5, 6, 7, 10
+10:51:51 [DEBUG] src/verifier.c:192 [verifier]     IMA event log attestation enabled: false
+10:51:51 [DEBUG] src/verifier.c:198 [verifier]     DTLS with PSK enabled: false
+10:51:51 [DEBUG] src/verifier.c:206 [verifier]     DTLS-RPK enabled: false
+10:51:51 [INFO] src/verifier.c:247 [verifier] Initializing CoAP in block-wise mode.
+10:51:51 [INFO] src/verifier.c:255 [verifier] Registering CoAP response handler.
+10:51:51 [INFO] src/verifier.c:294 [verifier] Creating CoAP client session using UDP.
+Apr 21 10:51:51.603 DEBG ***127.0.0.1:51197 <-> 127.0.0.1:5683 UDP : new outgoing session
+
+
+
+10:51:51 [INFO] src/verifier.c:326 [verifier] Creating attestation request.
+10:51:51 [INFO] src/verifier.c:661 [verifier] Generated nonce of length 20:
+                                                  0x428c49d95c300e2aa3525d8677bc5b1f1fe66502
+
+10:51:51 [INFO] src/verifier.c:336 [verifier] Marshaling attestation request data to CBOR.
+10:51:51 [DEBUG] src/core/charra_marshaling.c:161 Size of marshaled data is 52 bytes.
+10:51:51 [DEBUG] src/core/charra_marshaling.c:168 Allocated 52 bytes of memory.
+10:51:51 [INFO] src/verifier.c:346 [verifier] Adding CoAP option URI_PATH.
+10:51:51 [INFO] src/verifier.c:354 [verifier] Adding CoAP option CONTENT_TYPE.
+10:51:51 [INFO] src/verifier.c:364 [verifier] Creating request PDU.
+Apr 21 10:51:51.603 DEBG ***127.0.0.1:51197 <-> 127.0.0.1:5683 UDP : session ack_timeout set to 30.000
+10:51:51 [INFO] src/verifier.c:378 [verifier] Sending CoAP message.
+Apr 21 10:51:51.603 DEBG *  127.0.0.1:51197 <-> 127.0.0.1:5683 UDP : sent 67 bytes
+Apr 21 10:51:51.603 DEBG ***127.0.0.1:5683 <-> 127.0.0.1:51197 (if1) UDP : new incoming session
+v:1 t:CON c:FETCH i:d7ac {01} [ Uri-Path:attest, Content-Format:application/cbor ] :: binary data length 52
+<<85f44e504b2e5253412e64656661756c7454428c49d95c300e2aa3525d8677bc5b1f1fe6650281820b8900010203040506070a40>>
+<<. . N P K . R S A . d e f a u l t T B . I . \ 0 . * . R ] . w . [ . . . e . . . . . . . . . . . . . . @ >>
+Apr 21 10:51:51.603 DEBG ** 127.0.0.1:51197 <-> 127.0.0.1:5683 UDP : mid=0xd7ac: added to retransmit queue (44531ms)
+Apr 21 10:51:51.604 DEBG *  127.0.0.1:5683 <-> 127.0.0.1:51197 (if1) UDP : received 67 bytes
+10:51:51 [INFO] src/verifier.c:386 [verifier] Processing and waiting for response ...
+v:1 t:CON c:FETCH i:d7ac {01} [ Uri-Path:attest, Content-Format:application/cbor ] :: binary data length 52
+<<85f44e504b2e5253412e64656661756c7454428c49d95c300e2aa3525d8677bc5b1f1fe6650281820b8900010203040506070a40>>
+<<. . N P K . R S A . d e f a u l t T B . I . \ 0 . * . R ] . w . [ . . . e . . . . . . . . . . . . . . @ >>
+
+
+Apr 21 10:51:51.604 DEBG call custom handler for resource 'attest'
+10:51:51 [INFO] src/attester.c:375 [attester] Resource 'attest': Received message.
+10:51:51 [INFO] src/attester.c:389 [attester] Received data of length 52.
+10:51:51 [INFO] src/attester.c:391 [attester] Received data of total length 52.
+10:51:51 [INFO] src/attester.c:396 [attester] Parsing received CBOR data.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborArrayType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborFalseType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborByteStringType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborByteStringType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborArrayType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborArrayType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborIntegerType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborArrayType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborIntegerType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborIntegerType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborIntegerType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborIntegerType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborIntegerType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborIntegerType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborIntegerType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborIntegerType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborIntegerType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborByteStringType.
+
+
+10:51:51 [INFO] src/attester.c:406 [attester] Preparing TPM quote data.
+10:51:51 [INFO] src/attester.c:417 Received nonce of length 20:
+                                   0x428c49d95c300e2aa3525d8677bc5b1f1fe66502
+10:51:51 [INFO] src/attester.c:445 [attester] Loading TPM key.
+10:51:51 [INFO] src/core/charra_key_mgr.c:36 Loading key "PK.RSA.default".
+10:51:51 [INFO] src/util/tpm2_util.c:117 Primary Key created successfully.
+10:51:51 [INFO] src/attester.c:454 [attester] Do TPM Quote.
+10:51:51 [INFO] src/attester.c:462 [attester] TPM Quote successful.
+
+
+
+10:51:51 [INFO] src/attester.c:490 [attester] Preparing response.
+10:51:51 [INFO] src/attester.c:514 [attester] Marshaling response to CBOR.
+10:51:51 [DEBUG] src/core/charra_marshaling.c:382 Size of marshaled data is 1277 bytes.
+10:51:51 [DEBUG] src/core/charra_marshaling.c:389 Allocated 1277 bytes of memory.
+10:51:51 [INFO] src/attester.c:522 [attester] Size of marshaled response is 1277 bytes.
+10:51:51 [INFO] src/attester.c:529 [attester] Adding marshaled data to CoAP response PDU and send it.
+v:1 t:CON c:FETCH i:d7ac {01} [ Uri-Path:attest, Content-Format:application/cbor ] :: binary data length 52
+<<85f44e504b2e5253412e64656661756c7454428c49d95c300e2aa3525d8677bc5b1f1fe6650281820b8900010203040506070a40>>
+<<. . N P K . R S A . d e f a u l t T B . I . \ 0 . * . R ] . w . [ . . . e . . . . . . . . . . . . . . @ >>
+Apr 21 10:51:51.699 DEBG ** 127.0.0.1:5683 <-> 127.0.0.1:51197 (if1) UDP : lg_xmit 0x55d57e13de50 initialized
+Apr 21 10:51:51.699 DEBG PDU presented by app
+v:1 t:ACK c:2.05 i:d7ac {01} [ Content-Format:application/cbor ] :: binary data length 1277
+<<845885ff54434780180022000b96d591b30b7a46880156fd382eefcec850c0e7f81bff4fdc92ffadb6c7c224680014428c49d95c300e2aa3525d8677bc5b1f1fe665020000000041843916e1689210f382c062015a25f9bf0a40cd2500000001000b03ff040000202d5565fb483d8ea4525a7a9229677d1038ad34b6e22c8d5152e1d7f7b981759759020616000b0000014f2a49fea397513697ce655e778ffb8ab74415b2a1b07da6acd3de43ff0d21e7a341179fabee0032f4e1c726b04e6d95a00c68959e9e00007b26fd07fe5d4d4ffee94f299093738a23c00e192555f2c62ebf54749098004eb90a9f0f6bdc27f7de263d91559f19b8cea5ec1edf8423b51870911981845361b039798f26bf6627a9c8371a97beb3abb593e83338881992be71e32b6e23c358afa22340653f1cffab5477cc9129745ca1d3495f0f69e922534a00aaabc9cc388553d9f67aa0b30a9f787218ad23ded2b972b64aa0a8ae7b562f59aa4bb8f50a0b1f24231de2a3ab5ab08007ffabd480fb48836fdf4ef57499bd5c4720602dd63632a2df8ddb1d3c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005902681801000001000b0072000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000016000b00000000080000000000000001c68be9d2b56b1b7dd2998eee8e298d31f16c0efe41efe1a2205f4ef487370da834d8c669606fdcdd3e3a7ee89048d6dd419790e16ed7e384ad59b5837cfa3c55fa45b87962a8e2edf497338780f14b6af81f5d3d318c63ac361f828d15077b2215ead7d7044b3a9b64a567e0ff4d963dbecba847bdc34e73fafa6dd122d3c6fa6df2333ea805462fb998573ab8f7832e15f3596cf1a08dfe804de2a8988cb10c0ebd6c5d7a1502a90f90dd661e7ab414478be55792ed1e6f8a24f348fe25cc6f1652f8d9835e536453b7b8d2fc63317c15e1fb4ca36c98389886aecaaab28407d44fe9e346be03e879f8f533e014e66f85fca858f14db8bf79e0c538ce16ef0f00000000000000000<<. X . . T C G . . . " . . . . . . . z F . . V . 8 . . . . P . . . . . O . . . . . . . $ h . . B . I . \ 0 . * . R ] . w . [ . . . e . . . . . A . 9 . . h . . . . . b . Z % . . . @ . % . . . . . . . . . . .   - U e . H = . . R Z z . ) g } . 8 . 4 . . , . Q R . . . . . u . Y . . . . . . . . O * I . . . Q 6 . . e ^ w . . . . D . . . . } . . . . C . . ! . . A . . . . . 2 . . . & . N m . . . h . . . . . { & . . . ] M O . . O ) . . s . # . . . % U . . . . T t . . . N . . . . k . ' . . & = . U . . . . . . . . . # . . p . . . . S a . 9 y . & . f ' . . 7 . . . . . . . . 3 8 . . . . q . + n # . X . . # @ e ? . . . T w . . ) t \ . . I _ . i . " S J . . . . . 8 . S . . z . . . . x r . . # . . . r . J . . . { V / Y . K . . . . . $ # . . . . Z . . . . . . . . H . o . N . t . . \ G   ` - . 6 2 . . . . . < . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . Y . h . . . . . . . . r . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . k . } . . . . . ) . 1 . l . . A . . .   _ N . . 7 . . 4 . . i ` o . . > : ~ . . H . . A . . . n . . . . Y . . | . < U . E . y b . . . . . 3 . . . K j . . ] = 1 . c . 6 . . . . . { " . . . . . K : . d . g . . M . = . . . G . . N s . . m . " . . . m . 3 > . . F / . . W : . . . . . . Y l . . . . . M . . . . . . . . l ] z . . . . . . f . z . . G . . W . . . o . $ . H . % . o . R . . . ^ S d S . . . . c 1 | . . . L . l . 8 . . . . . . . . . O . . F . . . y . . 3 . . . o . . . X . M . . y . . 8 . . . . . . . . . . . . 
+Apr 21 10:51:51.799 DEBG *  127.0.0.1:5683 <-> 127.0.0.1:51197 (if1) UDP : sent 1039 bytes
+Apr 21 10:51:51.799 DEBG *  127.0.0.1:51197 <-> 127.0.0.1:5683 UDP : received 1039 bytes
+v:1 t:ACK c:2.05 i:d7ac {01} [ ETag:0x01, Content-Format:application/cbor, Block2:0/M/1024, Size2:1277 ] :: binary data length 1024
+<<845885ff54434780180022000b96d591b30b7a46880156fd382eefcec850c0e7f81bff4fdc92ffadb6c7c224680014428c49d95c300e2aa3525d8677bc5b1f1fe665020000000041843916e1689210f382c062015a25f9bf0a40cd2500000001000b03ff040000202d5565fb483d8ea4525a7a9229677d1038ad34b6e22c8d5152e1d7f7b981759759020616000b0000014f2a49fea397513697ce655e778ffb8ab74415b2a1b07da6acd3de43ff0d21e7a341179fabee0032f4e1c726b04e6d95a00c68959e9e00007b26fd07fe5d4d4ffee94f299093738a23c00e192555f2c62ebf54749098004eb90a9f0f6bdc27f7de263d91559f19b8cea5ec1edf8423b51870911981845361b039798f26bf6627a9c8371a97beb3abb593e83338881992be71e32b6e23c358afa22340653f1cffab5477cc9129745ca1d3495f0f69e922534a00aaabc9cc388553d9f67aa0b30a9f787218ad23ded2b972b64aa0a8ae7b562f59aa4bb8f50a0b1f24231de2a3ab5ab08007ffabd480fb48836fdf4ef57499bd5c4720602dd63632a2df8ddb1d3c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005902681801000001000b0072000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000016000b00000000080000000000000001c68be9d2b56b1b7dd2998eee8e298d31f16c0efe41efe1a2205f4ef487370da834d8c669606fdcdd3e3a7ee89048d6dd419790e16ed7e384ad59b5837cfa3c55fa45b87962a8e2edf497338780f14b6af81f5d3d318c63ac361f828d15077b2215ead7d7044b3a9b64a567e0ff4d963dbecba847bdc34e73fafa6dd122d3c6fa6df2333ea805462fb998573ab8f7832e15f3596cf1a08dfe804de2a8988cb10c0ebd6c5d7a1502a90f90dd661e7ab414478be55792ed1e6f8a24f348fe25cc6f1652f8d9835e536453b7b8d2fc63317c15e1fb4ca36c98389886aecaaab28407d44fe9e346be03e879f8f533e014e66f85fca858f14db8bf79e0c538ce16ef0f000000000000>>
+<<. X . . T C G . . . " . . . . . . . z F . . V . 8 . . . . P . . . . . O . . . . . . . $ h . . B . I . \ 0 . * . R ] . w . [ . . . e . . . . . A . 9 . . h . . . . . b . Z % . . . @ . % . . . . . . . . . . .   - U e . H = . . R Z z . ) g } . 8 . 4 . . , . Q R . . . . . u . Y . . . . . . . . O * I . . . Q 6 . . e ^ w . . . . D . . . . } . . . . C . . ! . . A . . . . . 2 . . . & . N m . . . h . . . . . { & . . . ] M O . . O ) . . s . # . . . % U . . . . T t . . . N . . . . k . ' . . & = . U . . . . . . . . . # . . p . . . . S a . 9 y . & . f ' . . 7 . . . . . . . . 3 8 . . . . q . + n # . X . . # @ e ? . . . T w . . ) t \ . . I _ . i . " S J . . . . . 8 . S . . z . . . . x r . . # . . . r . J . . . { V / Y . K . . . . . $ # . . . . Z . . . . . . . . H . o . N . t . . \ G   ` - . 6 2 . . . . . < . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . Y . h . . . . . . . . r . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . k . } . . . . . ) . 1 . l . . A . . .   _ N . . 7 . . 4 . . i ` o . . > : ~ . . H . . A . . . n . . . . Y . . | . < U . E . y b . . . . . 3 . . . K j . . ] = 1 . c . 6 . . . . . { " . . . . . K : . d . g . . M . = . . . G . . N s . . m . " . . . m . 3 > . . F / . . W : . . . . . . Y l . . . . . M . . . . . . . . l ] z . . . . . . f . z . . G . . W . . . o . $ . H . % . o .v:1 t:ACK c:2.05 i:d7ac {01} [ ETag:0x01, Content-Format:application/cbor, Block2:0/M/1024, Size2:1277 ] :: binary data length 1024
+<<845885ff54434780180022000b96d591b30b7a46880156fd382eefcec850c0e7f81bff4fdc92ffadb6c7c224680014428c49d95c300e2aa3525d8677bc5b1f1fe665020000000041843916e1689210f382c062015a25f9bf0a40cd2500000001000b03ff040000202d5565fb483d8ea4525a7a9229677d1038ad34b6e22c8d5152e1d7f7b981759759020616000b0000014f2a49fea397513697ce655e778ffb8ab74415b2a1b07da6acd3de43ff0d21e7a341179fabee0032f4e1c726b04e6d95a00c68959e9e00007b26fd07fe5d4d4ffee94f299093738a23c00e192555f2c62ebf54749098004eb90a9f0f6bdc27f7de263d91559f19b8cea5ec1edf8423b51870911981845361b039798f26bf6627a9c8371a97beb3abb593e83338881992be71e32b6e23c358afa22340653f1cffab5477cc9129745ca1d3495f0f69e922534a00aaabc9cc388553d9f67aa0b30a9f787218ad23ded2b972b64aa0a8ae7b562f59aa4bb8f50a0b1f24231de2a3ab5ab08007ffabd480fb48836fdf4ef57499bd5c4720602dd63632a2df8ddb1d3c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005902681801000001000b0072000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000016000b00000000080000000000000001c68be9d2b56b1b7dd2998eee8e298d31f16c0efe41efe1a2205f4ef487370da834d8c669606fdcdd3e3a7ee89048d6dd419790e16ed7e384ad59b5837cfa3c55fa45b87962a8e2edf497338780f14b6af81f5d3d318c63ac361f828d15077b2215ead7d7044b3a9b64a567e0ff4d963dbecba847bdc34e73fafa6dd122d3c6fa6df2333ea805462fb998573ab8f7832e15f3596cf1a08dfe804de2a8988cb10c0ebd6c5d7a1502a90f90dd661e7ab414478be55792ed1e6f8a24f348fe25cc6f1652f8d9835e536453b7b8d2fc63317c15e1fb4ca36c98389886aecaaab28407d44fe9e346be03e879f8f533e014e66f85fca858f14db8bf79e0c538ce16ef0f000000000000>>
+<<. X . . T C G . . . " . . . . . . . z F . . V . 8 . . . . P . . . . . O . . . . . . . $ h . . B . I . \ 0 . * . R ] . w . [ . . . e . . . . . A . 9 . . h . . . . . b . Z % . . . @ . % . . . . . . . . . . .   - U e . H = . . R Z z . ) g } . 8 . 4 . . , . Q R . . . . . u . Y . . . . . . . . O * I . . . Q 6 . . e ^ w . . . . D . . . . } . . . . C . . ! . . A . . . . . 2 . . . & . N m . . . h . . . . . { & . . . ] M O . . O ) . . s . # . . . % U . . . . T t . . . N . . . . k . ' . . & = . U . . . . . . . . . # . . p . . . . S a . 9 y . & . f ' . . 7 . . . . . . . . 3 8 . . . . q . + n # . X . . # @ e ? . . . T w . . ) t \ . . I _ . i . " S J . . . . . 8 . S . . z . . . . x r . . # . . . r . J . . . { V / Y . K . . . . . $ # . . . . Z . . . . . . . . H . o . N . t . . \ G   ` - . 6 2 . . . . . < . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . Y . h . . . . . . . . r . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . k . } . . . . . ) . 1 . l . . A . . .   _ N . . 7 . . 4 . . i ` o . . > : ~ . . H . . A . . . n . . . . Y . . | . < U . E . y b . . . . . 3 . . . K j . . ] = 1 . c . 6 . . . . . { " . . . . . K : . d . g . . M . = . . . G . . N s . . m . " . . . m . 3 > . . F / . . W : . . . . . . Y l . . . . . M . . . . . . . . l ] z . . . . . . f . z . . G . . W . . . o . $ . H . % . o . R . . . ^ S d S . . . . c 1 | . . . L . l . 8 . . . . . . . . . O . . F . . . y . . 3 . . . o . . . X . M . . y . . 8 . . . . . . . . . . >>
+Apr 21 10:51:51.800 DEBG ** 127.0.0.1:51197 <-> 127.0.0.1:5683 UDP : mid=0xd7ac: removed
+Apr 21 10:51:51.800 DEBG ** 127.0.0.1:51197 <-> 127.0.0.1:5683 UDP : lg_crcv 0x55e7fc98a4e0 initialized
+Apr 21 10:51:51.800 DEBG found Block option, block size is 1024, block nr. 0
+Apr 21 10:51:51.800 DEBG *  127.0.0.1:51197 <-> 127.0.0.1:5683 UDP : sent 16 bytes
+v:1 t:CON c:FETCH i:d7ad {02} [ Uri-Path:attest, Content-Format:application/cbor, Block2:1/_/1024 ]
+Apr 21 10:51:51.800 DEBG ** 127.0.0.1:51197 <-> 127.0.0.1:5683 UDP : mid=0xd7ad: added to retransmit queue (43594ms)
+ R . . . ^ S d S . . . . c 1 | . . . L . l . 8 . . . . . . . . . O . . F . . . y . . 3 . . . o . . . X . M . . y . . 8 . . . . . . . . . . >>
+Apr 21 10:51:51.800 DEBG *  127.0.0.1:5683 <-> 127.0.0.1:51197 (if1) UDP : received 16 bytes
+v:1 t:CON c:FETCH i:d7ad {02} [ Uri-Path:attest, Content-Format:application/cbor, Block2:1/_/1024 ]
+Apr 21 10:51:51.800 DEBG call custom handler for resource 'attest'
+Apr 21 10:51:51.800 DEBG found Block option, block size is 1024, block nr. 1, M 0
+Apr 21 10:51:51.800 DEBG *  127.0.0.1:5683 <-> 127.0.0.1:51197 (if1) UDP : sent 268 bytes
+Apr 21 10:51:51.800 DEBG *  127.0.0.1:51197 <-> 127.0.0.1:5683 UDP : received 268 bytes
+v:1 t:ACK c:2.05 i:d7ad {02} [ ETag:0x01, Content-Format:application/cbor, Block2:1/_/1024, Size2:1277 ] :: binary data length 253
+<<00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040>>
+<<. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . @ >>
+Apr 21 10:51:51.800 DEBG ** 127.0.0.1:51197 <-> 127.0.0.1:5683 UDP : mid=0xd7ad: removed
+Apr 21 10:51:51.800 DEBG found Block option, block size is 1024, block nr. 1
+Apr 21 10:51:51.800 DEBG Client app vesion of updated PDU
+v:1 t:ACK c:2.05 i:d7ad {01} [ ETag:0x01, Content-Format:application/cbor, Size2:1277 ] :: binary data length 1277
+<<845885ff54434780180022000b96d591b30b7a46880156fd382eefcec850c0e7f81bff4fdc92ffadb6c7c224680014428c49d95c300e2aa3525d8677bc5b1f1fe665020000000041843916e1689210f382c062015a25f9bf0a40cd2500000001000b03ff040000202d5565fb483d8ea4525a7a9229677d1038ad34b6e22c8d5152e1d7f7b981759759020616000b0000014f2a49fea397513697ce655e778ffb8ab74415b2a1b07da6acd3de43ff0d21e7a341179fabee0032f4e1c726b04e6d95a00c68959e9e00007b26fd07fe5d4d4ffee94f299093738a23c00e192555f2c62ebf54749098004eb90a9f0f6bdc27f7de263d91559f19b8cea5ec1edf8423b51870911981845361b039798f26bf6627a9c8371a97beb3abb593e83338881992be71e32b6e23c358afa22340653f1cffab5477cc9129745ca1d3495f0f69e922534a00aaabc9cc388553d9f67aa0b30a9f787218ad23ded2b972b64aa0a8ae7b562f59aa4bb8f50a0b1f24231de2a3ab5ab08007ffabd480fb48836fdf4ef57499bd5c4720602dd63632a2df8ddb1d3c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005902681801000001000b0072000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000016000b00000000080000000000000001c68be9d2b56b1b7dd2998eee8e298d31f16c0efe41efe1a2205f4ef487370da834d8c669606fdcdd3e3a7ee89048d6dd419790e16ed7e384ad59b5837cfa3c55fa45b87962a8e2edf497338780f14b6af81f5d3d318c63ac361f828d15077b2215ead7d7044b3a9b64a567e0ff4d963dbecba847bdc34e73fafa6dd122d3c6fa6df2333ea805462fb998573ab8f7832e15f3596cf1a08dfe804de2a8988cb10c0ebd6c5d7a1502a90f90dd661e7ab414478be55792ed1e6f8a24f348fe25cc6f1652f8d9835e536453b7b8d2fc63317c15e1fb4ca36c98389886aecaaab28407d44fe9e346be03e879f8f533e014e66f85fca858f14db8bf79e0c538ce16ef0f00000000000000000<<. X . . T C G . . . " . . . . . . . z F . . V . 8 . . . . P . . . . . O . . . . . . . $ h . . B . I . \ 0 . * . R ] . w . [ . . . e . . . . . A . 9 . . h . . . . . b . Z % . . . @ . % . . . . . . . . . . .   - U e . H = . . R Z z . ) g } . 8 . 4 . . , . Q R . . . . . u . Y . . . . . . . . O * I . . . Q 6 . . e ^ w . . . . D . . . . } . . . . C . . ! . . A . . . . . 2 . . . & . N m . . . h . . . . . { & . . . ] M O . . O ) . . s . # . . . % U . . . . T t . . . N . . . . k . ' . . & = . U . . . . . . . . . # . . p . . . . S a . 9 y . & . f ' . . 7 . . . . . . . . 3 8 . . . . q . + n # . X . . # @ e ? . . . T w . . ) t \ . . I _ . i . " S J . . . . . 8 . S . . z . . . . x r . . # . . . r . J . . . { V / Y . K . . . . . $ # . . . . Z . . . . . . . . H . o . N . t . . \ G   ` - . 6 2 . . . . . < . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . Y . h . . . . . . . . r . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . k . } . . . . . ) . 1 . l . . A . . .   _ N . . 7 . . 4 . . i ` o . . > : ~ . . H . . A . . . n . . . . Y . . | . < U . E . y b . . . . . 3 . . . K j . . ] = 1 . c . 6 . . . . . { " . . . . . K : . d . g . . M . = . . . G . . N s . . m . " . . . m . 3 > . . F / . . W : . . . . . . Y l . . . . . M . . . . . . . . l ] z . . . . . . f . z . . G . . W . . . o . $ . H . % . o . R . . . ^ S d 10:51:51 [INFO] src/verifier.c:708 [verifier] Resource 'attest': Received message.
+S . . . . c 1 | . . . L . l . 8 . . . . . . . . . O . . F . . . y . . 3 . . . o . . . X . M . . y . . 8 . . . . . . . . . . . . 
+v:1 t:ACK c:2.05 i:d7ad {01} [ ETag:0x01, Content-Format:application/cbor, Size2:1277 ] :: binary data length 1277
+<<845885ff54434780180022000b96d591b30b7a46880156fd382eefcec850c0e7f81bff4fdc92ffadb6c7c224680014428c49d95c300e2aa3525d8677bc5b1f1fe665020000000041843916e1689210f382c062015a25f9bf0a40cd2500000001000b03ff040000202d5565fb483d8ea4525a7a9229677d1038ad34b6e22c8d5152e1d7f7b981759759020616000b0000014f2a49fea397513697ce655e778ffb8ab74415b2a1b07da6acd3de43ff0d21e7a341179fabee0032f4e1c726b04e6d95a00c68959e9e00007b26fd07fe5d4d4ffee94f299093738a23c00e192555f2c62ebf54749098004eb90a9f0f6bdc27f7de263d91559f19b8cea5ec1edf8423b51870911981845361b039798f26bf6627a9c8371a97beb3abb593e83338881992be71e32b6e23c358afa22340653f1cffab5477cc9129745ca1d3495f0f69e922534a00aaabc9cc388553d9f67aa0b30a9f787218ad23ded2b972b64aa0a8ae7b562f59aa4bb8f50a0b1f24231de2a3ab5ab08007ffabd480fb48836fdf4ef57499bd5c4720602dd63632a2df8ddb1d3c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005902681801000001000b0072000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000016000b00000000080000000000000001c68be9d2b56b1b7dd2998eee8e298d31f16c0efe41efe1a2205f4ef487370da834d8c669606fdcdd3e3a7ee89048d6dd419790e16ed7e384ad59b5837cfa3c55fa45b87962a8e2edf497338780f14b6af81f5d3d318c63ac361f828d15077b2215ead7d7044b3a9b64a567e0ff4d963dbecba847bdc34e73fafa6dd122d3c6fa6df2333ea805462fb998573ab8f7832e15f3596cf1a08dfe804de2a8988cb10c0ebd6c5d7a1502a90f90dd661e7ab414478be55792ed1e6f8a24f348fe25cc6f1652f8d9835e536453b7b8d2fc63317c15e1fb4ca36c98389886aecaaab28407d44fe9e346be03e879f8f533e014e66f85fca858f14db8bf79e0c538ce16ef0f00000000000000000<<. X . . T C G . . . " . . . . . . . z F . . V . 8 . . . . P . . . . . O . . . . . . . $ h . . B . I . \ 0 . * . R ] . w . [ . . . e . . . . . A . 9 . . h . . . . . b . Z % . . . @ . % . . . . . . . . . . .   - U e . H = . . R Z z . ) g } . 8 . 4 . . , . Q R . . . . . u . Y . . . . . . . . O * I . . . Q 6 . . e ^ w . . . . D . . . . } . . . . C . . ! . . A . . . . . 2 . . . & . N m . . . h . . . . . { & . . . ] M O . . O ) . . s . # . . . % U . . . . T t . . . N . . . . k . ' . . & = . U . . . . . . . . . # . . p . . . . S a . 9 y . & . f ' . . 7 . . . . . . . . 3 8 . . . . q . + n # . X . . # @ e ? . . . T w . . ) t \ . . I _ . i . " S J . . . . . 8 . S . . z . . . . x r . . # . . . r . J . . . { V / Y . K . . . . . $ # . . . . Z . . . . . . . . H . o . N . t . . \ G   ` - . 6 2 . . . . . < . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . Y . h . . . . . . . . r . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . k . } . . . . . ) . 1 . l . . A . . .   _ N . . 7 . . 4 . . i ` o . . > : ~ . . H . . A . . . n . . . . Y . . | . < U . E . y b . . . . . 3 . . . K j . . ] = 1 . c . 6 . . . . . { " . . . . . K : . d . g . . M . = . . . G . . N s . . m . " . . . m . 3 > . . F /10:51:51 [INFO] src/verifier.c:725 [verifier] Received data of length 1277.
+10:51:51 [INFO] src/verifier.c:727 [verifier] Received data of total length 1277.
+10:51:51 [INFO] src/verifier.c:732 [verifier] Parsing received CBOR data.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborArrayType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborByteStringType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborByteStringType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborByteStringType.
+10:51:51 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborByteStringType.
+10:51:51 [INFO] src/verifier.c:759 [verifier] Starting verification.
+10:51:51 [INFO] src/verifier.c:779 [verifier] Loading TPM key.
+ERROR:esys:src/tss2-esys/esys_iutil.c:389:iesys_handle_to_tpm_handle() Error: Esys invalid ESAPI handle (40000001). 
+WARNING:esys:src/tss2-esys/esys_iutil.c:410:iesys_is_platform_handle() Convert handle from TPM2_RH to ESYS_TR, got: 0x40000001 
+10:51:51 [INFO] src/verifier.c:785 [verifier] External public key loaded.
+10:51:51 [INFO] src/verifier.c:789 [verifier] Preparing TPM Quote verification.
+10:51:51 [INFO] src/verifier.c:800 [verifier] Verifying TPM Quote signature with TPM ...
+ERROR:esys:src/tss2-esys/esys_iutil.c:389:iesys_handle_to_tpm_handle() Error: Esys invalid ESAPI handle (40000001). 
+WARNING:esys:src/tss2-esys/esys_iutil.c:410:iesys_is_platform_handle() Convert handle from TPM2_RH to ESYS_TR, got: 0x40000001 
+10:51:51 [INFO] src/verifier.c:806 [verifier]     => TPM Quote signature is valid!
+10:51:51 [INFO] src/verifier.c:816 [verifier] Converting TPM public key to mbedTLS public key ...
+10:51:51 [INFO] src/verifier.c:827 [verifier] Verifying TPM Quote signature with mbedTLS ...
+10:51:51 [INFO] src/verifier.c:833 [verifier]     => TPM Quote signature is valid!
+10:51:51 [INFO] src/verifier.c:854 [verifier] Verifying nonce ...
+10:51:51 [INFO] src/verifier.c:859 [verifier]     => Nonce in TPM Quote is valid! (matches the one sent)
+10:51:51 [INFO] src/verifier.c:872 [verifier] Verifying PCRs ...
+10:51:51 [INFO] src/verifier.c:874 [verifier] Actual PCR composite digest from TPM Quote is:
+                                              0x2d5565fb483d8ea4525a7a9229677d1038ad34b6e22c8d5152e1d7f7b9817597
+10:51:51 [INFO] src/verifier.c:881 [verifier] < reference-pcrs.txt >
+10:51:51 [INFO] src/verifier.c:882 [verifier] <  >
+10:51:51 [INFO] src/verifier.c:883 [verifier] < 9 >
+10:51:51 [INFO] src/verifier.c:884 [verifier] < GCT��" >
+10:51:51 [DEBUG] src/core/charra_rim_mgr.c:73 Checking PCR composite digest at PCR set index 0:
+                                              0x2d5565fb483d8ea4525a7a9229677d1038ad34b6e22c8d5152e1d7f7b9817597
+10:51:51 [INFO] src/core/charra_rim_mgr.c:82 Found matching PCR composite digest at index 0 of the PCR sets.
+10:51:51 [INFO] src/verifier.c:891 [verifier]     => PCR composite digest is valid!
+10:51:51 [INFO] src/verifier.c:893 [verifier]     => PCR composite digest is valid! (null)
+10:51:51 [INFO] src/verifier.c:945 [verifier] ATTESTEATION RESULT IS 1
+10:51:51 [INFO] src/verifier.c:948 [verifier] +----------------------------+
+10:51:51 [INFO] src/verifier.c:951 [verifier] |   ATTESTATION SUCCESSFUL   |
+10:51:51 [INFO] src/verifier.c:956 [verifier] +----------------------------+
+10:51:52 [INFO] src/verifier.c:414 [verifier] RESULTADO = 0
+10:51:52 [INFO] src/verifier.c:422 [verifier]
+10:51:52 [INFO] src/verifier.c:423 [verifier] ****************************************
+10:51:52 [INFO] src/verifier.c:424 [verifier] SENT ATTESTATION RESULT BACK TO ATTESTER
+10:51:52 [INFO] src/verifier.c:461 [verifier] Creating CoAP client session using UDP.
+ . . W : . . . . . . Y l . . . . . M . . . . . . . . l ] z . . . . . . f . z . . G . . W . . . o . $ . H . % . o . R . . . ^ S d S . . . . c 1 | . . . L . l . 8 . . . . . . . . . O . . F . . . y . . 3 . . . o . . . X . M . . y . . 8 . . . . . . . . . . . . 
+Apr 21 10:51:52.099 DEBG ***127.0.0.1:50996 <-> 127.0.0.1:5683 UDP : new outgoing session
+10:51:52 [INFO] src/verifier.c:492 [verifier] Creating attestation request.
+10:51:52 [INFO] src/verifier.c:594 [verifier]***** Running result Handler *****
+10:51:52 [INFO] src/verifier.c:502 [verifier] Marshaling attestation passport data to CBOR.
+10:51:52 [DEBUG] src/core/charra_marshaling.c:640 Size of marshaled data is 2 bytes.
+10:51:52 [DEBUG] src/core/charra_marshaling.c:647 Allocated 2 bytes of memory.
+10:51:52 [INFO] src/verifier.c:511 XPTO 0
+10:51:52 [INFO] src/verifier.c:514 [verifier] Initializing CoAP in block-wise mode.
+10:51:52 [INFO] src/verifier.c:524 [verifier] Adding CoAP option URI_PATH.
+10:51:52 [INFO] src/verifier.c:532 [verifier] Adding CoAP option CONTENT_TYPE.
+10:51:52 [INFO] src/verifier.c:542 [verifier] Creating request PDU. 
+Apr 21 10:51:52.099 DEBG ***127.0.0.1:50996 <-> 127.0.0.1:5683 UDP : session ack_timeout set to 30.000
+10:51:52 [INFO] src/verifier.c:556 [verifier] Sending CoAP message.
+Apr 21 10:51:52.099 DEBG *  127.0.0.1:50996 <-> 127.0.0.1:5683 UDP : sent 67 bytes
+v:1 t:CON c:FETCH i:71e9 {01} [ Uri-Path:result, Content-Format:application/cbor ] :: binary data length 52
+<<81f59afce755000000000000000000001992be71e32b6e2331000000000000000000000001000000010000000000000000000000>>
+<<. . . . . U . . . . . . . . . . . . . q . + n # 1 . . . . . . . . . . . . . . . . . . . . . . . . . . . >>
+Apr 21 10:51:52.099 DEBG ** 127.0.0.1:50996 <-> 127.0.0.1:5683 UDP : mid=0x71e9: added to retransmit queue (33281ms)
+v:1 t:ACK c:2.05 i:d7ad {02} [ ETag:0x01, Content-Format:application/cbor, Block2:1/_/1024, Size2:1277 ] :: binary data length 253
+<<00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040>>
+<<. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . @ >>
+Apr 21 10:51:52.099 DEBG ***127.0.0.1:5683 <-> 127.0.0.1:50996 (if1) UDP : new incoming session
+Apr 21 10:51:52.099 DEBG *  127.0.0.1:5683 <-> 127.0.0.1:50996 (if1) UDP : received 67 bytes
+v:1 t:CON c:FETCH i:71e9 {01} [ Uri-Path:result, Content-Format:application/cbor ] :: binary data length 52
+<<81f59afce755000000000000000000001992be71e32b6e2331000000000000000000000001000000010000000000000000000000>>
+<<. . . . . U . . . . . . . . . . . . . q . + n # 1 . . . . . . . . . . . . . . . . . . . . . . . . . . . >>
+Apr 21 10:51:52.099 DEBG call custom handler for resource 'result'
+10:51:52 [INFO] src/attester.c:304 [attester] ATTESTATION RECEIVED.
+10:51:52 [INFO] src/attester.c:322 [attester] Received data of length 52.
+10:51:52 [INFO] src/attester.c:324 [attester] Received data of total length 52.
+10:51:52 [INFO] src/attester.c:329 [attester] Parsing received CBOR data.
+10:51:52 [INFO] src/core/charra_marshaling.c:589 HERE 0 �����U
+10:51:52 [DEBUG] src/util/cbor_util.c:114 CBOR parser: found type CborArrayType.
+10:51:52 [31mERROR] src/core/charra_marshaling.c:605 ***CBOR parser: QCBOR_SUCCESS
+10:51:52 [INFO] src/core/charra_marshaling.c:606 ***CBOR parser: skipping parsing.
+10:51:52 [31mERROR] src/attester.c:333 [attester] Could not parse CBOR data.
+Apr 21 10:51:52.099 DEBG *  127.0.0.1:5683 <-> 127.0.0.1:50996 (if1) UDP : sent 4 bytes
+v:1 t:ACK c:0.00 i:71e9 {} [ ]
+Apr 21 10:51:53.103 DEBG ** 127.0.0.1:5683 <-> 127.0.0.1:51197 (if1) UDP : lg_xmit 0x55d57e13de50 released
+Apr 21 10:51:53.103 DEBG ***127.0.0.1:5683 <-> 127.0.0.1:51197 (if1) UDP : session closed
+Apr 21 10:51:53.103 DEBG ***127.0.0.1:5683 <-> 127.0.0.1:50996 (if1) UDP : session closed

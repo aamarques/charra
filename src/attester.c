@@ -50,7 +50,7 @@
 static bool quit = false;
 
 /* logging */
-#define LOG_NAME "attester (server)"
+#define LOG_NAME "attester"
 coap_log_t coap_log_level = LOG_INFO;
 // #define LOG_LEVEL_CBOR LOG_DEBUG
 charra_log_t charra_log_level = CHARRA_LOG_INFO;
@@ -84,7 +84,7 @@ static void handle_sigint(int signum);
 static void release_data(
 	struct coap_session_t* session CHARRA_UNUSED, void* app_ptr);
 
-static void coap_attest_received();
+static void coap_attest_received_handler();
 
 static void coap_attest_handler(struct coap_context_t* ctx,
 	struct coap_resource_t* resource, struct coap_session_t* session,
@@ -256,7 +256,7 @@ int main(int argc, char** argv) {
 	/* REGISTRA NOVO RECURSO E NOVO HANDLER */
 	charra_log_info("[" LOG_NAME "] Registering CoAP ATTESTED resources.");
 	charra_coap_add_resource(
- 	 	coap_context, COAP_REQUEST_FETCH, "result", coap_attest_received);
+ 	 	coap_context, COAP_REQUEST_FETCH, "result", coap_attest_received_handler);
 
 
 	/* enter main loop */
@@ -294,10 +294,71 @@ static void release_data(
 	charra_free_and_null(app_ptr);
 }
 
-static void coap_attest_received() {
-	charra_log_info("[" LOG_NAME "] ATTESTATION RECEIVED.");
-}
+// TEST BEGIN
+static void coap_attest_received_handler(struct coap_context_t* ctx CHARRA_UNUSED,
+	struct coap_resource_t* resource, struct coap_session_t* session,
+	struct coap_pdu_t* in, struct coap_binary_t* token,
+	struct coap_string_t* query, struct coap_pdu_t* out) {
 
+	/* --- receive incoming data --- */
+	charra_log_info("[" LOG_NAME "] ATTESTATION RECEIVED.");
+
+	// CHARRA_RC charra_r = CHARRA_RC_SUCCESS;
+	// int coap_r = 0;
+	// // TSS2_RC tss_r = 0;
+	// // ESYS_TR sig_key_handle = ESYS_TR_NONE;
+	// // TPM2B_PUBLIC* public_key = NULL;
+
+	// /* get data */
+	// size_t data_len = 0;
+	// const uint8_t* data = NULL;
+	// size_t data_offset = 0;
+	// size_t data_total_len = 0;
+	// if ((coap_r = coap_get_data_large(
+	// 		 in, &data_len, &data, &data_offset, &data_total_len)) == 0) {
+	// 	charra_log_error("[" LOG_NAME "] Could not get CoAP PDU data.");
+	// 	// goto error;
+	// } else {
+	// 	charra_log_info(
+	// 		"[" LOG_NAME "] Received data of length %zu.", data_len);
+	// 	charra_log_info("[" LOG_NAME "] Received data of total length %zu.",
+	// 		data_total_len);
+	// }
+
+	/* unmarshal data */
+	charra_log_info("[" LOG_NAME "] Parsing received CBOR data.");
+	// msg_attestation_response_passport_dto req = {0};
+	// if ((charra_r = charra_unmarshal_attestation_passport(
+	// 		 data_len, data, &req)) != CHARRA_RC_SUCCESS) {
+	// 	charra_log_error("[" LOG_NAME "] Could not parse CBOR data.");
+	// 	// goto error;
+	// }
+
+// error:
+	/* Free heap objects */
+	// charra_free_if_not_null(signature);
+	// charra_free_if_not_null(attest_buf);
+	// charra_free_if_not_null(public_key);
+	// charra_free_continous_file_buffer(&ima_event_log);
+
+	// /* flush handles */
+	// if (sig_key_handle != ESYS_TR_NONE) {
+	// 	if (Esys_FlushContext(esys_ctx, sig_key_handle) != TSS2_RC_SUCCESS) {
+	// 		charra_log_error(
+	// 			"[" LOG_NAME "] TSS cleanup sig_key_handle failed.");
+	// 	}
+	// }
+
+	// /* finalize ESAPI */
+	// if (esys_ctx != NULL) {
+	// 	Esys_Finalize(&esys_ctx);
+	// }
+	// if (tcti_ctx != NULL) {
+	// 	Tss2_TctiLdr_Finalize(&tcti_ctx);
+	// }
+
+}
+// TEST END
 
 static void coap_attest_handler(struct coap_context_t* ctx CHARRA_UNUSED,
 	struct coap_resource_t* resource, struct coap_session_t* session,
@@ -351,7 +412,7 @@ static void coap_attest_handler(struct coap_context_t* ctx CHARRA_UNUSED,
 	}
 	TPM2B_DATA qualifying_data = {.size = 0, .buffer = {0}};
 	qualifying_data.size = req.nonce_len;
-	memcpy(qualifying_data.buffer, req.nonce, req.nonce_len);
+	memcpy(qualifying_data.buffer, req.nonce, req.nonce_len);  //void *memcpy(void *dest, const void * src, size_t n)
 
 	charra_log_info("Received nonce of length %d:", req.nonce_len);
 	charra_print_hex(CHARRA_LOG_INFO, req.nonce_len, req.nonce,
@@ -366,7 +427,7 @@ static void coap_attest_handler(struct coap_context_t* ctx CHARRA_UNUSED,
 		goto error;
 	}
 
-	/* initialize ESAPI */
+	/* initialize ESAPI */  
 	ESYS_CONTEXT* esys_ctx = NULL;
 	TSS2_TCTI_CONTEXT* tcti_ctx = NULL;
 	if ((tss_r = Tss2_TctiLdr_Initialize(getenv("CHARRA_TCTI"), &tcti_ctx)) !=

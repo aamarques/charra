@@ -79,4 +79,16 @@ CHARRA_RC charra_unmarshal_attestation_response(
 	const uint32_t marshaled_data_len, const uint8_t* marshaled_data,
 	msg_attestation_response_dto* attestation_response);
 
+CHARRA_RC charra_marshal_attestation_passport(
+	const msg_attestation_result_passport_dto* attestation_request,
+	uint32_t* marshaled_data_len, uint8_t** marshaled_data);
+
+// CHARRA_RC charra_unmarshal_attestation_passport(
+// 	const uint32_t marshaled_data_len, const uint8_t* marshaled_data,
+// 	msg_attestation_response_passport_dto* attestation_response);
+
+
+
+
+
 #endif /* MARSHALING_UTIL_H */
