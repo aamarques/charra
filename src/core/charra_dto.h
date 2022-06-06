@@ -98,9 +98,14 @@ typedef struct {
 } msg_attestation_response_dto;
 
 
+// typedef struct {
+// 	bool attestation;
+// 	struct msg_attestation_response_dto{} attestation_response;
+// } msg_attestation_appraise_result_dto;
+
 typedef struct {
-	bool attestation;
-	struct msg_attestation_response_dto{} attestation_response;
+    uint32_t attestation_result_data_len;
+	uint8_t attestation_result_data;
 } msg_attestation_appraise_result_dto;
 
 // typedef struct {

@@ -5,11 +5,11 @@
  ****************************************************************************/
 
 /**
- * @file verifier.c
- * @author Michael Eckel (michael.eckel@sit.fraunhofer.de)
+ * @file relying_party.c
+ * @author Antonio Marques using code from Michael Eckel (michael.eckel@sit.fraunhofer.de)
  * @brief
  * @version 0.1
- * @date 2019-09-19
+ * @date 2022-06-06
  *
  * @copyright Copyright 2019, Fraunhofer Institute for Secure Information
  * Technology SIT. All rights reserved.

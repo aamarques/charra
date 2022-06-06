@@ -303,59 +303,39 @@ static void coap_attest_received_handler(struct coap_context_t* ctx CHARRA_UNUSE
 	/* --- receive incoming data --- */
 	charra_log_info("[" LOG_NAME "] ATTESTATION RECEIVED.");
 
-	// CHARRA_RC charra_r = CHARRA_RC_SUCCESS;
-	// int coap_r = 0;
-	// // TSS2_RC tss_r = 0;
-	// // ESYS_TR sig_key_handle = ESYS_TR_NONE;
-	// // TPM2B_PUBLIC* public_key = NULL;
+	CHARRA_RC charra_r = CHARRA_RC_SUCCESS;
+	int coap_r = 0;
+	// TSS2_RC tss_r = 0;
+	// ESYS_TR sig_key_handle = ESYS_TR_NONE;
+	// TPM2B_PUBLIC* public_key = NULL;
 
-	// /* get data */
-	// size_t data_len = 0;
-	// const uint8_t* data = NULL;
-	// size_t data_offset = 0;
-	// size_t data_total_len = 0;
-	// if ((coap_r = coap_get_data_large(
-	// 		 in, &data_len, &data, &data_offset, &data_total_len)) == 0) {
-	// 	charra_log_error("[" LOG_NAME "] Could not get CoAP PDU data.");
-	// 	// goto error;
-	// } else {
-	// 	charra_log_info(
-	// 		"[" LOG_NAME "] Received data of length %zu.", data_len);
-	// 	charra_log_info("[" LOG_NAME "] Received data of total length %zu.",
-	// 		data_total_len);
-	// }
+	/* get data */
+	size_t data_len = 0;
+	const uint8_t* data = NULL;
+	size_t data_offset = 0;
+	size_t data_total_len = 0;
+	if ((coap_r = coap_get_data_large(
+			 in, &data_len, &data, &data_offset, &data_total_len)) == 0) {
+		charra_log_error("[" LOG_NAME "] Could not get CoAP PDU data.");
+		// goto error;
+	} else {
+		charra_log_info(
+			"[" LOG_NAME "] Received data of length %zu.", data_len);
+		charra_log_info("[" LOG_NAME "] Received data of total length %zu.",
+			data_total_len);
+	}
 
 	/* unmarshal data */
 	charra_log_info("[" LOG_NAME "] Parsing received CBOR data.");
-	// msg_attestation_response_passport_dto req = {0};
-	// if ((charra_r = charra_unmarshal_attestation_passport(
-	// 		 data_len, data, &req)) != CHARRA_RC_SUCCESS) {
-	// 	charra_log_error("[" LOG_NAME "] Could not parse CBOR data.");
-	// 	// goto error;
-	// }
+	msg_attestation_appraise_result_dto att_result = {0};
+	if ((charra_r = charra_unmarshal_attestation_passport(
+			 data_len, data, &att_result)) != CHARRA_RC_SUCCESS) {
+		charra_log_error("[" LOG_NAME "] Could not parse CBOR data.");
+	} else {
+		charra_log_info("Attestation Recieved!!");
+	}
 
-// error:
-	/* Free heap objects */
-	// charra_free_if_not_null(signature);
-	// charra_free_if_not_null(attest_buf);
-	// charra_free_if_not_null(public_key);
-	// charra_free_continous_file_buffer(&ima_event_log);
-
-	// /* flush handles */
-	// if (sig_key_handle != ESYS_TR_NONE) {
-	// 	if (Esys_FlushContext(esys_ctx, sig_key_handle) != TSS2_RC_SUCCESS) {
-	// 		charra_log_error(
-	// 			"[" LOG_NAME "] TSS cleanup sig_key_handle failed.");
-	// 	}
-	// }
-
-	// /* finalize ESAPI */
-	// if (esys_ctx != NULL) {
-	// 	Esys_Finalize(&esys_ctx);
-	// }
-	// if (tcti_ctx != NULL) {
-	// 	Tss2_TctiLdr_Finalize(&tcti_ctx);
-	// }
+    
 
 }
 // TEST END
@@ -520,7 +500,7 @@ static void coap_attest_handler(struct coap_context_t* ctx CHARRA_UNUSED,
 		goto error;
 	}
 	charra_log_info(
-		"[" LOG_NAME "] Size of marshaled response is %d bytes.", res_buf_len);
+		"[" LOG_NAME "] Size of marshaled response is %d bytes. %s", res_buf_len, res_buf );
 
 	// TODO in case an error above occurred, a error respone should be sent
 	// TODO the Verifier should be able to handle this error reponse
