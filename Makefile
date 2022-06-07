@@ -61,7 +61,7 @@ OBJECTS =  $(addsuffix .o, $(addprefix $(OBJDIR)/common/, charra_log))
 OBJECTS += $(addsuffix .o, $(addprefix $(OBJDIR)/core/, charra_helper charra_key_mgr charra_rim_mgr charra_marshaling))
 OBJECTS += $(addsuffix .o, $(addprefix $(OBJDIR)/util/, cbor_util charra_util coap_util crypto_util io_util tpm2_util cli_util parser_util))
 
-TARGETS = $(addprefix $(BINDIR)/, attester verifier)
+TARGETS = $(addprefix $(BINDIR)/, attester verifier relying_party)
 
 
 
@@ -96,6 +96,11 @@ ifdef strip
 	strip --strip-unneeded $@
 endif
 
+$(BINDIR)/relying_party: $(SRCDIR)/relying_party.c $(OBJECTS)
+	$(CC) $^ $(CFLAGS) $(INCLUDE) $(LIBINCLUDE) $(LDPATH) $(LDFLAGS) -g -o $@ -Wl,--gc-sections
+ifdef strip
+	strip --strip-unneeded $@
+endif
 
 
 ## --- objects ------------------------------------------------------------ ##

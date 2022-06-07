@@ -417,10 +417,6 @@ int main(int argc, char** argv) {
 	// normal exit from processing loop, set result to result of attestation
 	result = attestation_rc;
 
-     
-	charra_log_info("[" LOG_NAME "] attestation_rc = %d", result);
-
- /* aqui que tem que enviar o resultado (result) para o attester */
   
 // *****************************************************************************************
 //  TEST AREA {BEGIN}
@@ -468,30 +464,30 @@ int main(int argc, char** argv) {
 	coap_optlist_t* coap_options2 = NULL;
 
 	/* CoAP options */
-	charra_log_info("[" LOG_NAME "] Adding CoAP option URI_PATH.");
+	charra_log_info("[" LOG_NAME "] Adding CoAP option [result] to URI_PATH.");
 	if (coap_insert_optlist(
 			&coap_options2, coap_new_optlist(COAP_OPTION_URI_PATH, 6,
 							   (const uint8_t*)"result")) != 1) {
-		charra_log_error("[" LOG_NAME "] Cannot add CoAP option URI_PATH.");
+		charra_log_error("[" LOG_NAME "] Cannot add CoAP option [result] to URI_PATH.");
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
 
-	charra_log_info("[" LOG_NAME "] Adding CoAP option CONTENT_TYPE.");
+	charra_log_info("[" LOG_NAME "] Adding CoAP option [result] to CONTENT_TYPE.");
 	if (coap_insert_optlist(&coap_options2,
 			coap_new_optlist(COAP_OPTION_CONTENT_TYPE,
 				coap_mediatype_cbor_buf_len, coap_mediatype_cbor_buf)) != 1) {
-		charra_log_error("[" LOG_NAME "] Cannot add CoAP option CONTENT_TYPE.");
+		charra_log_error("[" LOG_NAME "] Cannot add CoAP option [result] to CONTENT_TYPE.");
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
 
 	/* new CoAP request PDU */
-	charra_log_info("[" LOG_NAME "] Creating request PDU. ");
+	charra_log_info("[" LOG_NAME "] Creating [result] PDU. ");
 	if ((pdu2 = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
 			 COAP_REQUEST_FETCH, &coap_options2, ares_buf, ares_buf_len)) ==
 		NULL) {
-		charra_log_error("[" LOG_NAME "] Cannot create request PDU.");
+		charra_log_error("[" LOG_NAME "] Cannot create [result] PDU.");
 		result = CHARRA_RC_ERROR;
 		goto cleanup;
 	}
@@ -501,9 +497,9 @@ int main(int argc, char** argv) {
 	coap_session_set_ack_timeout(coap_session, coap_timeout2);
 
 	/* send CoAP PDU */
-	charra_log_info("[" LOG_NAME "] Sending CoAP message.");
+	charra_log_info("[" LOG_NAME "] Sending [result] CoAP message.");
 	if ((mid2 = coap_send_large(coap_session, pdu2)) == COAP_INVALID_MID) {
-		charra_log_error("[" LOG_NAME "] Cannot send CoAP message.");
+		charra_log_error("[" LOG_NAME "] Cannot send result CoAP message.");
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
@@ -595,7 +591,7 @@ static CHARRA_RC create_attestation_request(
 
 // PASSPORT MODEL
 static CHARRA_RC create_appraisal_result(uint8_t attestation_result) {
-	charra_log_info ("[" LOG_NAME "]***** Creating Appraisal Struct ***** %zu", attestation_result);
+	charra_log_info ("[" LOG_NAME "]  Creating Appraisal Structure.");
 	// CHARRA_RC err = CHARRA_RC_ERROR;
 
   	msg_attestation_appraise_result_dto att_result = {
@@ -868,7 +864,7 @@ static coap_response_t coap_attest_handler(
 
 // I know this is not the best practice, but.... :)
 	if (attestation_result) {
-    	charra_log_info("[" LOG_NAME "] ATTESTEATION RESULT IS TRUE"); 
+    	charra_log_info("[" LOG_NAME "] Preparing ATTESTEATION RESULT for Attester"); 
 		create_appraisal_result(attestation_result);
 	} 
 

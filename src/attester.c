@@ -301,7 +301,10 @@ static void coap_attest_received_handler(struct coap_context_t* ctx CHARRA_UNUSE
 	struct coap_string_t* query, struct coap_pdu_t* out) {
 
 	/* --- receive incoming data --- */
-	charra_log_info("[" LOG_NAME "] ATTESTATION RECEIVED.");
+
+	charra_log_info("[" LOG_NAME "] +----------------------------+");
+	charra_log_info("[" LOG_NAME "] |    ATTESTATION RECEIVED    |");
+	charra_log_info("[" LOG_NAME "] +----------------------------+");
 
 	CHARRA_RC charra_r = CHARRA_RC_SUCCESS;
 	int coap_r = 0;
@@ -325,15 +328,17 @@ static void coap_attest_received_handler(struct coap_context_t* ctx CHARRA_UNUSE
 			data_total_len);
 	}
 
-	/* unmarshal data */
-	charra_log_info("[" LOG_NAME "] Parsing received CBOR data.");
-	msg_attestation_appraise_result_dto att_result = {0};
-	if ((charra_r = charra_unmarshal_attestation_passport(
-			 data_len, data, &att_result)) != CHARRA_RC_SUCCESS) {
-		charra_log_error("[" LOG_NAME "] Could not parse CBOR data.");
-	} else {
-		charra_log_info("Attestation Recieved!!");
-	}
+	charra_log_info("[" LOG_NAME "] Calling Relying Party.");
+
+	// /* unmarshal data */
+	// charra_log_info("[" LOG_NAME "] Parsing received CBOR data.");
+	// msg_attestation_appraise_result_dto att_result = {0};
+	// if ((charra_r = charra_unmarshal_attestation_passport(
+	// 		 data_len, data, &att_result)) != CHARRA_RC_SUCCESS) {
+	// 	charra_log_error("[" LOG_NAME "] Could not parse CBOR data.");
+	// } else {
+	// 	charra_log_info("Attestation Recieved!!");
+	// }
 
     
 
