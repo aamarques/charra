@@ -642,6 +642,7 @@ CHARRA_RC charra_unmarshal_attestation_passport(
 	}
 
 	// /* set output */
+	// charra_log_trace("%s", marshaled_data);
 	*attestation_result = att;
 
 	return CHARRA_RC_SUCCESS;

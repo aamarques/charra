@@ -296,7 +296,7 @@ int main(int argc, char** argv) {
 			result = CHARRA_RC_ERROR;
 			goto cleanup;
 		}
-	} else {    /* CRIA UM ENDPOINT (coap_context, &addr, coap_protocol) */
+	} else {   
 		charra_log_info(
 			"[" LOG_NAME "] Creating CoAP client session using UDP.");
 		if ((coap_session = charra_coap_new_client_session(
