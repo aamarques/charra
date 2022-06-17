@@ -297,7 +297,7 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 	charra_log_info(
 		"[" LOG_NAME "] Resource '%s': Received message.", "attestationResult");
 	
-	// coap_show_pdu(LOG_DEBUG, in);
+	coap_show_pdu(LOG_DEBUG, in);
 
 
 	CHARRA_RC charra_r = CHARRA_RC_SUCCESS;
@@ -311,6 +311,7 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 	const uint8_t* data = NULL;
 	size_t data_offset = 0;
 	size_t data_total_len = 0;
+
 	if ((coap_r = coap_get_data_large(
 			 in, &data_len, &data, &data_offset, &data_total_len)) == 0) {
 		charra_log_error("[" LOG_NAME "] Could not get CoAP PDU data.");
@@ -330,8 +331,12 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 		charra_log_error("[" LOG_NAME "] Could not parse CBOR data.");
 	} else {
 		charra_log_info("[" LOG_NAME "] Attestation Result Unmarshelled");
-
 	}
+
+
+	charra_log_info("[" LOG_NAME "] data_len %d", data_len); 
+	charra_log_info("[" LOG_NAME "] data = <%s>", att_result.attestation_result_data); 
+	
 }
 // TEST END
 

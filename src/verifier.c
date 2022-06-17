@@ -89,6 +89,7 @@ char* dtls_rpk_public_key_path = "keys/verifier.pub.der";
 char* dtls_rpk_peer_public_key_path = "keys/attester.pub.der";
 bool dtls_rpk_verify_peer_public_key = true;
 
+bool attestation_rp = false;
 
 /* --- function forward declarations -------------------------------------- */
 
@@ -115,8 +116,8 @@ static msg_attestation_response_dto last_response = {0};
 // static CHARRA_RC create_appraisal_result(
 // 	msg_attestation_response_dto* att_response);
 
-static CHARRA_RC create_appraisal_result(uint8_t attestation_result);
-static msg_attestation_appraise_result_dto last_passport_result = {0};
+// static CHARRA_RC create_appraisal_result(uint8_t attestation_result);
+// static msg_attestation_appraise_result_dto last_passport_result = {0};
 
 
 /* --- main --------------------------------------------------------------- */
@@ -419,13 +420,24 @@ int main(int argc, char** argv) {
 
   
 // *****************************************************************************************
-//  TEST AREA {BEGIN}
+//  RETURN ATTESTATION RESULT BACK TO ATTESTE {BEGIN}
+// *****************************************************************************************
+	
+ 	charra_log_trace("[" LOG_NAME "] Preparing ATTESTEATION RESULT for Attester (%d)", attestation_rp); 
+	// create_appraisal_result(result);
+
+	charra_log_info ("[" LOG_NAME "]  Creating Appraisal Structure.");
+
+    msg_attestation_appraise_result_dto att_result = {
+		// .attestation_result_data_len = sizeof(result),
+		.attestation_result_data_len = sizeof("sardinha"),
+		.attestation_result_data = "sardinha",
+		};
 
 	/* define needed variables */
-	msg_attestation_appraise_result_dto ares= {0};
+	//msg_attestation_appraise_result_dto ares= {0};
 	uint8_t* ares_buf = NULL; 
 	uint32_t ares_buf_len = 0;
-
 	
 	coap_pdu_t* pdu2 = NULL;
 	coap_mid_t mid2 = COAP_INVALID_MID;
@@ -455,7 +467,7 @@ int main(int argc, char** argv) {
 	charra_log_info(
 		"[" LOG_NAME "] Marshaling attestation request data to CBOR.");
 	if ((result = charra_marshal_attestation_result(
-			 &ares, &ares_buf_len, &ares_buf)) != CHARRA_RC_SUCCESS) {
+			 &att_result, &ares_buf_len, &ares_buf)) != CHARRA_RC_SUCCESS) {
 		charra_log_error(
 			"[" LOG_NAME "] Marshaling attestation request data failed.");
 		goto cleanup;
@@ -505,7 +517,8 @@ int main(int argc, char** argv) {
 	}
 	
 // *****************************************************************************************
-// TEST AREA {END}
+//  RETURN ATTESTATION RESULT BACK TO ATTESTE {END}
+// *****************************************************************************************
 
 	/* wait until next attestation */
 	// TODO enable periodic attestations
@@ -533,8 +546,6 @@ cleanup:
 /* --- function definitions ----------------------------------------------- */
 
 static void handle_sigint(int signum CHARRA_UNUSED) { quit = true; }
-
-
 
 static CHARRA_RC create_attestation_request(
 	msg_attestation_request_dto* attestation_request) {
@@ -590,19 +601,21 @@ static CHARRA_RC create_attestation_request(
 }
 
 // PASSPORT MODEL
-static CHARRA_RC create_appraisal_result(uint8_t attestation_result) {
-	charra_log_info ("[" LOG_NAME "]  Creating Appraisal Structure.");
-	// CHARRA_RC err = CHARRA_RC_ERROR;
+// static CHARRA_RC create_appraisal_result(uint8_t attestation_result) {
+// 	charra_log_info ("[" LOG_NAME "]  Creating Appraisal Structure.");
 
-  	msg_attestation_appraise_result_dto att_result = {
-		.attestation_result_data = attestation_result,
-		};
+//   	msg_attestation_appraise_result_dto att_result = {
+// 		.attestation_result_data_len = sizeof(attestation_result)/sizeof(uint8_t),
+// 		.attestation_result_data = attestation_result,
+// 		};
 
-	/* set output param(s) */
-	last_passport_result = att_result;
+// 	/* set output param(s) */
+// 	last_passport_result = att_result;
+// 	charra_log_info ("[" LOG_NAME "]  Apraisal = %d", att_result.attestation_result_data_len);
 
-	return CHARRA_RC_SUCCESS;
-}
+
+// 	return CHARRA_RC_SUCCESS;
+// }
 
 /* --- resource handler definitions --------------------------------------- */
 
@@ -851,6 +864,8 @@ static coap_response_t coap_attest_handler(
 							  attestation_result_nonce &&
 							  attestation_result_pcrs && attestation_event_log;
 
+	attestation_rp = attestation_result;
+
 	/* print attestation result */
 	charra_log_info("[" LOG_NAME "] +----------------------------+");
 	if (attestation_result) {
@@ -862,11 +877,6 @@ static coap_response_t coap_attest_handler(
 	}
 	charra_log_info("[" LOG_NAME "] +----------------------------+");
 
-// I know this is not the best practice, but.... :)
-	if (attestation_result) {
-    	charra_log_info("[" LOG_NAME "] Preparing ATTESTEATION RESULT for Attester"); 
-		create_appraisal_result(attestation_result);
-	} 
 
 cleanup:
 	/* flush handles */

@@ -266,11 +266,6 @@ int main(int argc, char** argv) {
 	charra_coap_add_resource(
  	 	coap_context, COAP_REQUEST_FETCH, "result", coap_attest_received_handler);
 
-	// /* REGISTRA NOVO RECURSO E NOVO HANDLER */
-	// charra_log_info("[" LOG_NAME "] Registering CoAP [relying_party] resources.");
-	// charra_coap_add_resource(
- 	//  	coap_context, COAP_REQUEST_FETCH, "attestationResult", coap_attest_received_handler);
-
 	/* enter main loop */
 	charra_log_debug("[" LOG_NAME "] Entering main loop.");
 	while (!quit) {
@@ -311,10 +306,8 @@ static void coap_attest_received_handler(struct coap_context_t* ctx CHARRA_UNUSE
 	struct coap_resource_t* resource, struct coap_session_t* session,
 	struct coap_pdu_t* in, struct coap_binary_t* token,
 	struct coap_string_t* query, struct coap_pdu_t* out) {
-// static void coap_attest_received_handler(struct coap_context_t* ctx CHARRA_UNUSED,
-// 	struct coap_session_t* session,	struct coap_pdu_t* in) {
-	/* --- receive incoming data --- */
 
+	/* --- receive incoming data --- */
 
 	charra_log_info("[" LOG_NAME "] +----------------------------+");
 	charra_log_info("[" LOG_NAME "] |    ATTESTATION RECEIVED    |");
@@ -356,13 +349,10 @@ static void coap_attest_received_handler(struct coap_context_t* ctx CHARRA_UNUSE
 		goto cleanup;
 	}
 
+// *****************************************************************************************
 	/* ***> BEGIN <*** */
    	/* define needed variables */
 
-	// msg_attestation_appraise_result_dto ares= {0};
-	// int8_t* ares_buf = NULL; 
-	// uint32_t ares_buf_len = 0;
-	
 	int8_t* ares_buf = data; 
 	uint32_t ares_buf_len = data_len;
 
@@ -434,8 +424,9 @@ static void coap_attest_received_handler(struct coap_context_t* ctx CHARRA_UNUSE
 		goto cleanup;
 	}
 	
+
 // *****************************************************************************************
-// TEST AREA {END}
+// << END >>
 
 	/* wait until next attestation */
 	// TODO enable periodic attestations
@@ -561,7 +552,7 @@ static void coap_attest_handler(struct coap_context_t* ctx CHARRA_UNUSED,
 		charra_log_error("[" LOG_NAME "] TPM2 quote.");
 		goto error;
 	} else {
-		charra_log_info("[" LOG_NAME "] TPM Quote successful.");
+		charra_log_info("["     LOG_NAME "] TPM Quote successful.");
 	}
 
 	/* --- send response data --- */
