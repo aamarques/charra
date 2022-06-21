@@ -107,6 +107,8 @@ static coap_response_t coap_attest_handler(struct coap_context_t* context,
 	coap_session_t* session, coap_pdu_t* sent, coap_pdu_t* received,
 	const coap_mid_t mid);
 
+int  send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_session,
+	coap_optlist_t* coap_options);
 /* --- static variables --------------------------------------------------- */
 
 static msg_attestation_request_dto last_request = {0};
@@ -415,110 +417,16 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	if ((result = send_attestation_results(
+			attestation_rc, coap_session, coap_options)) != CHARRA_RC_SUCCESS)
+	 	{   charra_log_info(
+			"[" LOG_NAME "] Error Sending Attestation Results to Attester");
+			result = CHARRA_RC_ERROR;
+			goto cleanup;
+		}
+
 	// normal exit from processing loop, set result to result of attestation
 	result = attestation_rc;
-
-  
-// *****************************************************************************************
-//  RETURN ATTESTATION RESULT BACK TO ATTESTE {BEGIN}
-// *****************************************************************************************
-	
- 	charra_log_trace("[" LOG_NAME "] Preparing ATTESTEATION RESULT for Attester (%d)", attestation_rp); 
-	// create_appraisal_result(result);
-
-	charra_log_info ("[" LOG_NAME "]  Creating Appraisal Structure.");
-
-    msg_attestation_appraise_result_dto att_result = {
-		// .attestation_result_data_len = sizeof(result),
-		.attestation_result_data_len = sizeof("sardinha"),
-		.attestation_result_data = "sardinha",
-		};
-
-	/* define needed variables */
-	//msg_attestation_appraise_result_dto ares= {0};
-	uint8_t* ares_buf = NULL; 
-	uint32_t ares_buf_len = 0;
-	
-	coap_pdu_t* pdu2 = NULL;
-	coap_mid_t mid2 = COAP_INVALID_MID;
-
-	/* create CoAP option for content type */
-	uint8_t coap_mediatype_cbor_buf2[4] = {0};
-	unsigned int coap_mediatype_cbor_buf_len2 = 0;
-	if ((coap_mediatype_cbor_buf_len2 = coap_encode_var_safe(
-			 coap_mediatype_cbor_buf2, sizeof(coap_mediatype_cbor_buf2),
-			 COAP_MEDIATYPE_APPLICATION_CBOR)) == 0) {
-		charra_log_error(
-			"[" LOG_NAME "] Cannot create option for CONTENT_TYPE.");
-		result = CHARRA_RC_COAP_ERROR;
-		goto cleanup;
-	}
-
-	/* create CoAP context */
-
-	charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
-	if ((coap_context = charra_coap_new_context(true)) == NULL) {
-		charra_log_error("[" LOG_NAME "] Cannot create CoAP context.");
-		result = CHARRA_RC_COAP_ERROR;
-		goto cleanup;
-	}
-
-	/* marshal attestation request */
-	charra_log_info(
-		"[" LOG_NAME "] Marshaling attestation request data to CBOR.");
-	if ((result = charra_marshal_attestation_result(
-			 &att_result, &ares_buf_len, &ares_buf)) != CHARRA_RC_SUCCESS) {
-		charra_log_error(
-			"[" LOG_NAME "] Marshaling attestation request data failed.");
-		goto cleanup;
-	}
-
-	coap_optlist_t* coap_options2 = NULL;
-
-	/* CoAP options */
-	charra_log_info("[" LOG_NAME "] Adding CoAP option [result] to URI_PATH.");
-	if (coap_insert_optlist(
-			&coap_options2, coap_new_optlist(COAP_OPTION_URI_PATH, 6,
-							   (const uint8_t*)"result")) != 1) {
-		charra_log_error("[" LOG_NAME "] Cannot add CoAP option [result] to URI_PATH.");
-		result = CHARRA_RC_COAP_ERROR;
-		goto cleanup;
-	}
-
-	charra_log_info("[" LOG_NAME "] Adding CoAP option [result] to CONTENT_TYPE.");
-	if (coap_insert_optlist(&coap_options2,
-			coap_new_optlist(COAP_OPTION_CONTENT_TYPE,
-				coap_mediatype_cbor_buf_len, coap_mediatype_cbor_buf)) != 1) {
-		charra_log_error("[" LOG_NAME "] Cannot add CoAP option [result] to CONTENT_TYPE.");
-		result = CHARRA_RC_COAP_ERROR;
-		goto cleanup;
-	}
-
-	/* new CoAP request PDU */
-	charra_log_info("[" LOG_NAME "] Creating [result] PDU. ");
-	if ((pdu2 = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
-			 COAP_REQUEST_FETCH, &coap_options2, ares_buf, ares_buf_len)) ==
-		NULL) {
-		charra_log_error("[" LOG_NAME "] Cannot create [result] PDU.");
-		result = CHARRA_RC_ERROR;
-		goto cleanup;
-	}
-
-	/* set timeout length */
-	coap_fixed_point_t coap_timeout2 = {attestation_response_timeout, 0};
-	coap_session_set_ack_timeout(coap_session, coap_timeout2);
-
-	/* send CoAP PDU */
-	charra_log_info("[" LOG_NAME "] Sending [result] CoAP message.");
-	if ((mid2 = coap_send_large(coap_session, pdu2)) == COAP_INVALID_MID) {
-		charra_log_error("[" LOG_NAME "] Cannot send result CoAP message.");
-		result = CHARRA_RC_COAP_ERROR;
-		goto cleanup;
-	}
-	
-// *****************************************************************************************
-//  RETURN ATTESTATION RESULT BACK TO ATTESTE {END}
-// *****************************************************************************************
 
 	/* wait until next attestation */
 	// TODO enable periodic attestations
@@ -542,6 +450,7 @@ cleanup:
 
 	return result;
 }
+
 
 /* --- function definitions ----------------------------------------------- */
 
@@ -600,22 +509,6 @@ static CHARRA_RC create_attestation_request(
 	return CHARRA_RC_SUCCESS;
 }
 
-// PASSPORT MODEL
-// static CHARRA_RC create_appraisal_result(uint8_t attestation_result) {
-// 	charra_log_info ("[" LOG_NAME "]  Creating Appraisal Structure.");
-
-//   	msg_attestation_appraise_result_dto att_result = {
-// 		.attestation_result_data_len = sizeof(attestation_result)/sizeof(uint8_t),
-// 		.attestation_result_data = attestation_result,
-// 		};
-
-// 	/* set output param(s) */
-// 	last_passport_result = att_result;
-// 	charra_log_info ("[" LOG_NAME "]  Apraisal = %d", att_result.attestation_result_data_len);
-
-
-// 	return CHARRA_RC_SUCCESS;
-// }
 
 /* --- resource handler definitions --------------------------------------- */
 
@@ -804,17 +697,12 @@ static coap_response_t coap_attest_handler(
 			attest_struct.attested.quote.pcrDigest.buffer,
 			"                                              0x", "\n", false);
 
-        charra_log_info("[" LOG_NAME "] < %s >", &attest_struct);
-
-
 		CHARRA_RC pcr_check =
 			charra_check_pcr_digest_against_reference(reference_pcr_file_path,
 				tpm_pcr_selection, tpm_pcr_selection_len, &attest_struct);
 		if (pcr_check == CHARRA_RC_SUCCESS) {
 			charra_log_info(
 				"[" LOG_NAME "]     => PCR composite digest is valid!");
-			charra_log_info("[" LOG_NAME "]     => PCR composite digest is valid! %s", pcr_check);
-
 			attestation_result_pcrs = true;
 		} else {
 			charra_log_error(
@@ -875,7 +763,7 @@ static coap_response_t coap_attest_handler(
 		attestation_rc = CHARRA_RC_VERIFICATION_FAILED;
 		charra_log_info("[" LOG_NAME "] |     ATTESTATION FAILED     |");
 	}
-	charra_log_info("[" LOG_NAME "] +----------------------------+");
+	charra_log_info("[" LOG_NAME "] +----------------------------+\n");
 
 
 cleanup:
@@ -906,4 +794,127 @@ cleanup:
 
 	processing_response = false;
 	return COAP_RESPONSE_OK;
+}
+
+
+int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_session,
+	coap_optlist_t* coap_options)
+{
+	CHARRA_RC result = EXIT_FAILURE;
+
+ 	charra_log_trace("[" LOG_NAME "] Preparing ATTESTEATION RESULT for Attester (%d)", attestation_rp); 
+	// create_appraisal_result(result);
+
+	charra_log_info ("[" LOG_NAME "]  Creating Appraisal Structure.");
+
+	uint8_t* attestationResult = NULL;
+	if (attestation_rc == 0) { 
+		attestationResult="valid";
+	} else {
+		attestationResult="invalid";
+	};
+
+    msg_attestation_appraise_result_dto att_result = {
+		// .attestation_result_data_len = sizeof(result),
+		.attestation_result_data_len = sizeof(attestationResult),
+		.attestation_result_data = attestationResult,
+		};
+
+	/* define needed variables */
+	//msg_attestation_appraise_result_dto ares= {0};
+	uint8_t* ares_buf = NULL; 
+	uint32_t ares_buf_len = 0;
+	
+	coap_pdu_t* pdu2 = NULL;
+	coap_mid_t mid2 = COAP_INVALID_MID;
+	coap_context_t* coap_context = NULL;;
+
+	/* create CoAP option for content type */
+	uint8_t coap_mediatype_cbor_buf2[4] = {0};
+	unsigned int coap_mediatype_cbor_buf_len2 = 0;
+	if ((coap_mediatype_cbor_buf_len2 = coap_encode_var_safe(
+			 coap_mediatype_cbor_buf2, sizeof(coap_mediatype_cbor_buf2),
+			 COAP_MEDIATYPE_APPLICATION_CBOR)) == 0) {
+		charra_log_error(
+			"[" LOG_NAME "] Cannot create option for CONTENT_TYPE.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+
+	/* create CoAP context */
+
+	charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
+	if ((coap_context = charra_coap_new_context(true)) == NULL) {
+		charra_log_error("[" LOG_NAME "] Cannot create CoAP context.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+
+	/* marshal attestation request */
+	charra_log_info(
+		"[" LOG_NAME "] Marshaling attestation request data to CBOR.");
+	if ((result = charra_marshal_attestation_result(
+			 &att_result, &ares_buf_len, &ares_buf)) != CHARRA_RC_SUCCESS) {
+		charra_log_error(
+			"[" LOG_NAME "] Marshaling attestation request data failed.");
+		goto cleanup;
+	}
+
+	coap_optlist_t* coap_options2 = NULL;
+
+	/* CoAP options */
+	charra_log_info("[" LOG_NAME "] Adding CoAP option [result] to URI_PATH.");
+	if (coap_insert_optlist(
+			&coap_options2, coap_new_optlist(COAP_OPTION_URI_PATH, 6,
+							   (const uint8_t*)"result")) != 1) {
+		charra_log_error("[" LOG_NAME "] Cannot add CoAP option [result] to URI_PATH.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+
+	charra_log_info("[" LOG_NAME "] Adding CoAP option [result] to CONTENT_TYPE.");
+	if (coap_insert_optlist(&coap_options2,
+			coap_new_optlist(COAP_OPTION_CONTENT_TYPE,
+				coap_mediatype_cbor_buf_len2, coap_mediatype_cbor_buf2)) != 1) {
+		charra_log_error("[" LOG_NAME "] Cannot add CoAP option [result] to CONTENT_TYPE.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+
+	/* new CoAP request PDU */
+	charra_log_info("[" LOG_NAME "] Creating [result] PDU. ");
+	if ((pdu2 = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
+			 COAP_REQUEST_FETCH, &coap_options2, ares_buf, ares_buf_len)) ==
+		NULL) {
+		charra_log_error("[" LOG_NAME "] Cannot create [result] PDU.");
+		result = CHARRA_RC_ERROR;
+		goto cleanup;
+	}
+
+	/* set timeout length */
+	coap_fixed_point_t coap_timeout2 = {attestation_response_timeout, 0};
+	coap_session_set_ack_timeout(coap_session, coap_timeout2);
+
+	/* send CoAP PDU */
+	charra_log_info("[" LOG_NAME "] Sending [result] CoAP message.");
+	if ((mid2 = coap_send_large(coap_session, pdu2)) == COAP_INVALID_MID) {
+		charra_log_error("[" LOG_NAME "] Cannot send result CoAP message.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+	
+	return CHARRA_RC_SUCCESS;
+
+cleanup:
+	/* free CoAP memory */
+	charra_free_if_not_null_ex(coap_options, coap_delete_optlist);
+	charra_free_if_not_null_ex(coap_session, coap_session_release);
+	charra_free_if_not_null_ex(coap_context, coap_free_context);
+
+	/* free variables */
+	charra_free_if_not_null(ares_buf);
+
+	coap_cleanup();
+
+	return result;
 }

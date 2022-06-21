@@ -335,7 +335,7 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 
 
 	charra_log_info("[" LOG_NAME "] data_len %d", data_len); 
-	charra_log_info("[" LOG_NAME "] data = <%s>", att_result.attestation_result_data); 
+	charra_log_info("[" LOG_NAME "] data = < %s >", att_result.attestation_result_data); 
 	
 }
 // TEST END

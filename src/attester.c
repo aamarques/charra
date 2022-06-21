@@ -92,7 +92,10 @@ static void handle_sigint(int signum);
 static void release_data(
 	struct coap_session_t* session CHARRA_UNUSED, void* app_ptr);
 
-static void coap_attest_received_handler();
+static void coap_attestation_results_handler(struct coap_context_t* ctx CHARRA_UNUSED,
+	struct coap_resource_t* resource, struct coap_session_t* session,
+	struct coap_pdu_t* in, struct coap_binary_t* token,
+	struct coap_string_t* query, struct coap_pdu_t* out);
 
 static void coap_attest_handler(struct coap_context_t* ctx,
 	struct coap_resource_t* resource, struct coap_session_t* session,
@@ -264,7 +267,7 @@ int main(int argc, char** argv) {
 	/* REGISTRA NOVO RECURSO E NOVO HANDLER */
 	charra_log_info("[" LOG_NAME "] Registering CoAP ATTESTED resources.");
 	charra_coap_add_resource(
- 	 	coap_context, COAP_REQUEST_FETCH, "result", coap_attest_received_handler);
+ 	 	coap_context, COAP_REQUEST_FETCH, "result", coap_attestation_results_handler);
 
 	/* enter main loop */
 	charra_log_debug("[" LOG_NAME "] Entering main loop.");
@@ -301,28 +304,32 @@ static void release_data(
 	charra_free_and_null(app_ptr);
 }
 
-// TEST BEGIN
-static void coap_attest_received_handler(struct coap_context_t* ctx CHARRA_UNUSED,
+// PASSPORT MODEL SENDING MESSAGE TO RP - BEGIN 
+// Based on some previous charra functions 
+//
+static void coap_attestation_results_handler(struct coap_context_t* ctx CHARRA_UNUSED,
 	struct coap_resource_t* resource, struct coap_session_t* session,
 	struct coap_pdu_t* in, struct coap_binary_t* token,
 	struct coap_string_t* query, struct coap_pdu_t* out) {
 
 	/* --- receive incoming data --- */
 
-	charra_log_info("[" LOG_NAME "] +----------------------------+");
-	charra_log_info("[" LOG_NAME "] |    ATTESTATION RECEIVED    |");
-	charra_log_info("[" LOG_NAME "] +----------------------------+");
+	charra_log_info("[" LOG_NAME "] +-----------------------------------+");
+	charra_log_info("[" LOG_NAME "] |  VERIFIER ATTESTATION RECEIVED    |");
+	charra_log_info("[" LOG_NAME "] +-----------------------------------+");
 
+	// Variables
 	int coap_r = 0;
-	// TSS2_RC tss_r = 0;
-	// ESYS_TR sig_key_handle = ESYS_TR_NONE;
-	// TPM2B_PUBLIC* public_key = NULL;
-
-	/* get data */
 	size_t data_len = 0;
 	const uint8_t* data = NULL;
 	size_t data_offset = 0;
 	size_t data_total_len = 0;
+	uint8_t coap_mediatype_cbor_buf2[4] = {0};
+	unsigned int coap_mediatype_cbor_buf_len2 = 0;
+
+	coap_pdu_t* pdu2 = NULL;
+	coap_mid_t mid2 = COAP_INVALID_MID;
+	coap_optlist_t* coap_options2 = NULL;
 
 	if ((coap_r = coap_get_data_large(
 			 in, &data_len, &data, &data_offset, &data_total_len)) == 0) {
@@ -337,31 +344,17 @@ static void coap_attest_received_handler(struct coap_context_t* ctx CHARRA_UNUSE
 
 	charra_log_info("[" LOG_NAME "] Calling Relying Party.");
 
-	char dst_host[16] = "172.18.0.2";	 // 15 characters for IPv4 plus \0
-	unsigned int dst_port = 5683;		 // default port
 	charra_log_info(
 		"[" LOG_NAME "] Creating CoAP client session using UDP.");
 	if ((coap_session = charra_coap_new_client_session(
-				ctx, dst_host, dst_port, COAP_PROTO_UDP)) == NULL) {
+				ctx, LISTEN_AUX, COAP_DEFAULT_PORT, COAP_PROTO_UDP)) == NULL) {
 		charra_log_error(
 			"[" LOG_NAME "] Cannot create client session based on UDP.");
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
 
-// *****************************************************************************************
-	/* ***> BEGIN <*** */
-   	/* define needed variables */
-
-	int8_t* ares_buf = data; 
-	uint32_t ares_buf_len = data_len;
-
-	coap_pdu_t* pdu2 = NULL;
-	coap_mid_t mid2 = COAP_INVALID_MID;
-
 	/* create CoAP option for content type */
-	uint8_t coap_mediatype_cbor_buf2[4] = {0};
-	unsigned int coap_mediatype_cbor_buf_len2 = 0;
 	if ((coap_mediatype_cbor_buf_len2 = coap_encode_var_safe(
 			 coap_mediatype_cbor_buf2, sizeof(coap_mediatype_cbor_buf2),
 			 COAP_MEDIATYPE_APPLICATION_CBOR)) == 0) {
@@ -372,16 +365,12 @@ static void coap_attest_received_handler(struct coap_context_t* ctx CHARRA_UNUSE
 	}
 
 	/* create CoAP context */
-
 	charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
-//	if ((coap_context = charra_coap_new_context(true)) == NULL) {
 	if ((ctx = charra_coap_new_context(true)) == NULL) {
 		charra_log_error("[" LOG_NAME "] Cannot create CoAP context.");
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
-
-	coap_optlist_t* coap_options2 = NULL;
 
 	/* CoAP options */
 	charra_log_info("[" LOG_NAME "] Adding CoAP option [attestationResult] to URI_PATH.");
@@ -405,53 +394,31 @@ static void coap_attest_received_handler(struct coap_context_t* ctx CHARRA_UNUSE
 	/* new CoAP request PDU */
 	charra_log_info("[" LOG_NAME "] Creating [attestationResult] PDU. ");
 	if ((pdu2 = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
-			 COAP_REQUEST_FETCH, &coap_options2, ares_buf, ares_buf_len)) ==
-		NULL) {
-		charra_log_error("[" LOG_NAME "] Cannot create [attestationResult] PDU.");
-		result = CHARRA_RC_ERROR;
-		goto cleanup;
+		 COAP_REQUEST_FETCH, &coap_options2, data, data_len)) == NULL) {
+			charra_log_error("[" LOG_NAME "] Cannot create [attestationResult] PDU.");
+			result = CHARRA_RC_ERROR;
+			goto cleanup;
 	}
 
-	/* set timeout length */
-	coap_fixed_point_t coap_timeout2 = {attestation_response_timeout, 0};
-	coap_session_set_ack_timeout(coap_session, coap_timeout2);
-
 	/* send CoAP PDU */
-	charra_log_info("[" LOG_NAME "] Sending [attestationResult] CoAP message.");
+	charra_log_info("[" LOG_NAME "] Sending [attestationResult] CoAP message to Relying Party.");
 	if ((mid2 = coap_send_large(coap_session, pdu2)) == COAP_INVALID_MID) {
 		charra_log_error("[" LOG_NAME "] Cannot send result CoAP message.");
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
 	
-
-// *****************************************************************************************
-// << END >>
-
-	/* wait until next attestation */
-	// TODO enable periodic attestations
-	// charra_log_info(
-	// 	"[" LOG_NAME
-	// 	"] Waiting %d seconds until next attestation request ...",
-	// 	PERIODIC_ATTESTATION_WAIT_TIME_S);
-	// sleep(PERIODIC_ATTESTATION_WAIT_TIME_S);
-	// }
-
 cleanup:
 	/* free CoAP memory */
 	charra_free_if_not_null_ex(coap_options, coap_delete_optlist);
 	charra_free_if_not_null_ex(coap_session, coap_session_release);
 	charra_free_if_not_null_ex(coap_context, coap_free_context);
 
-	/* free variables */
-	charra_free_if_not_null(ares_buf);
-
 	coap_cleanup();
 
-	// return result;
-}
+// PASSPORT MODEL SENDING MESSAGE TO RP - END
 
-// TEST END
+}
 
 static void coap_attest_handler(struct coap_context_t* ctx CHARRA_UNUSED,
 	struct coap_resource_t* resource, struct coap_session_t* session,
