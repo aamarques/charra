@@ -91,4 +91,8 @@ CHARRA_RC charra_crypto_rsa_verify_signature(
 CHARRA_RC compute_and_check_PCR_digest(uint8_t** pcr_values,
 	uint32_t pcr_value_len, const TPMS_ATTEST* const attest_struct);
 
+CHARRA_RC charra_sign_att_result();
+// CHARRA_RC charra_sign_att_result(char* peer_private_key_path, char attestationResult);
+	// char buf, size_t olen);
+
 #endif /* SITIMA_CRYPTO_H */

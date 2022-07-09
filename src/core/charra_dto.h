@@ -105,7 +105,9 @@ typedef struct {
 
 typedef struct {
     uint32_t attestation_result_data_len;
-	uint8_t* attestation_result_data;
+	char* attestation_result_data;
+	unsigned char signature;
+	uint32_t signature_len;
 } msg_attestation_appraise_result_dto;
 
 // typedef struct {

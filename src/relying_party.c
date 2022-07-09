@@ -69,7 +69,7 @@ char* dtls_psk_hint = "Charra Attester"; 	// REVER ESTE ITEM
 
 // for DTLS-RPK
 bool use_dtls_rpk = false;
-char* dtls_rpk_private_key_path = "keys/attester.der";
+char* dtls_rpk_private_key_path = "keys/rparty.der";
 char* dtls_rpk_public_key_path = "keys/attester.pub.der";
 char* dtls_rpk_peer_public_key_path = "keys/verifier.pub.der";
 bool dtls_rpk_verify_peer_public_key = true;

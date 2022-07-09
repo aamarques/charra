@@ -109,6 +109,7 @@ static coap_response_t coap_attest_handler(struct coap_context_t* context,
 
 int  send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_session,
 	coap_optlist_t* coap_options);
+
 /* --- static variables --------------------------------------------------- */
 
 static msg_attestation_request_dto last_request = {0};
@@ -807,15 +808,21 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 
 	charra_log_info ("[" LOG_NAME "]  Creating Appraisal Structure.");
 
-	uint8_t* attestationResult = NULL;
+	char* attestationResult = NULL;
 	if (attestation_rc == 0) { 
-		attestationResult="valid";
+		attestationResult = "valid";
 	} else {
-		attestationResult="invalid";
+		attestationResult = "invalid";
 	};
 
+	// size_t signature_len = 0;
+	// unsigned char signature = "";
+	charra_log_debug("[" LOG_NAME "] SIGNING BEGIN");
+    // char ret = charra_sign_att_result(dtls_rpk_private_key_path, attestationResult, signature, signature_len);
+    char ret = charra_sign_att_result();
+    charra_log_debug("[" LOG_NAME "] SIGNING END %s", ret);
+
     msg_attestation_appraise_result_dto att_result = {
-		// .attestation_result_data_len = sizeof(result),
 		.attestation_result_data_len = sizeof(attestationResult),
 		.attestation_result_data = attestationResult,
 		};

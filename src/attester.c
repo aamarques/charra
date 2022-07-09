@@ -57,7 +57,7 @@ charra_log_t charra_log_level = CHARRA_LOG_INFO;
 
 /* config */
 static const char LISTEN_ADDRESS[] = "0.0.0.0";
-static const char LISTEN_AUX[] = "172.18.0.2";
+static const char LISTEN_RP[] = "172.18.0.2";
 static unsigned int port = COAP_DEFAULT_PORT; // default port 5683
 #define CBOR_ENCODER_BUFFER_LENGTH 20480	  // 20 KiB should be sufficient
 bool use_ima_event_log = false;
@@ -347,7 +347,7 @@ static void coap_attestation_results_handler(struct coap_context_t* ctx CHARRA_U
 	charra_log_info(
 		"[" LOG_NAME "] Creating CoAP client session using UDP.");
 	if ((coap_session = charra_coap_new_client_session(
-				ctx, LISTEN_AUX, COAP_DEFAULT_PORT, COAP_PROTO_UDP)) == NULL) {
+				ctx, LISTEN_RP, COAP_DEFAULT_PORT, COAP_PROTO_UDP)) == NULL) {
 		charra_log_error(
 			"[" LOG_NAME "] Cannot create client session based on UDP.");
 		result = CHARRA_RC_COAP_ERROR;
