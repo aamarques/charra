@@ -3,7 +3,8 @@
 
 CFLAGS = -std=c99 -g -pedantic -Wall -Wextra \
          -Wno-missing-field-initializers \
-         -fdata-sections -ffunction-sections
+         -fdata-sections -ffunction-sections \
+	 -Wformat=2
 
 ifdef disable-log
 	CFLAGS += -DCHARRA_LOG_DISABLE

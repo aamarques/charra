@@ -41,6 +41,8 @@
 #include "util/coap_util.h"
 #include "util/io_util.h"
 #include "util/tpm2_util.h"
+#include "util/crypto_util.h"
+
 
 #define CHARRA_UNUSED __attribute__((unused))
 
@@ -323,6 +325,7 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 			data_total_len);
 	}
 
+
 	/* unmarshal data */
 	charra_log_info("[" LOG_NAME "] Parsing received CBOR data.");
 	msg_attestation_appraise_result_dto att_result = {0};
@@ -333,10 +336,19 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 		charra_log_info("[" LOG_NAME "] Attestation Result Unmarshelled");
 	}
 
+	charra_log_debug("[" LOG_NAME "]     data_len %d", data_len); 
+	charra_log_debug("[" LOG_NAME "]     data = < %s >", att_result.attestation_result_data); 
+	charra_log_debug("[" LOG_NAME "]     signature_len %d", att_result.attestation_signature_len ); 
 
-	charra_log_info("[" LOG_NAME "] data_len %d", data_len); 
-	charra_log_info("[" LOG_NAME "] data = < %s >", att_result.attestation_result_data); 
-	
+ 	if ((charra_verify_att_result(dtls_rpk_peer_public_key_path, att_result.attestation_result_data, 
+		att_result.attestation_signature, att_result.attestation_signature_len) !=0)) {
+		charra_log_error("[" LOG_NAME "] error verifing signature attestation result.");
+		return CHARRA_RC_ERROR;
+	} else {
+		charra_log_info("[" LOG_NAME "] +-----------------------------------+");
+		charra_log_info("[" LOG_NAME "] |      PASSPORT MODEL VALIDATED     |");
+		charra_log_info("[" LOG_NAME "] +-----------------------------------+");
+	}
 }
 // TEST END
 

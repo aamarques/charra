@@ -345,36 +345,33 @@ CHARRA_RC compute_and_check_PCR_digest(uint8_t** pcr_values,
 }
 
 
-CHARRA_RC charra_sign_att_result()
-	// char signature, size_t olen)
+CHARRA_RC charra_sign_att_result(char* peer_private_key_path, 
+	char* attestationResult, unsigned char signature[], size_t* sig_size)
 {
 
 // From: Verifier
 // Send: path_to_verifier_pk, attestationResult
 // Return: Signature, length
 
-    int ret = 1;
-    int exit_code = CHARRA_RC_ERROR;
-
-    mbedtls_pk_context pk;
+    mbedtls_pk_context peer_private_key;
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctr_drbg;
 
-    unsigned char hash[32];
-	unsigned char hash_v[32];
-    unsigned char buf[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
-    const unsigned char text_to_sign[] = "text";
-    const char *pers = "mbedtls_pk_sign";
-    size_t olen = 0;
-	char* peer_private_key_path = "keys/verifier.der";
-	char* peer_public_key_path = "keys/verifier.pub.der";
-    size_t ilen = sizeof(text_to_sign);
+    mbedtls_entropy_init(&entropy);
+    mbedtls_ctr_drbg_init(&ctr_drbg);
+    mbedtls_pk_init(&peer_private_key);
 
-    mbedtls_entropy_init( &entropy );
-    mbedtls_ctr_drbg_init( &ctr_drbg );
-    mbedtls_pk_init( &pk );
+    int ret = 1;
+    int exit_code = CHARRA_RC_ERROR;
+    unsigned char hash[32];
+    unsigned char sig_buffer[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
+	size_t sig_buffer_len = 0;
+    unsigned char (*att_result)[] = attestationResult;
+    const char *pers = "mbedtls_pk_sign";
+    size_t att_result_len = sizeof(attestationResult);
     
-    charra_log_info("[" LOG_NAME "] Seeding the random number generator... ");
+	charra_log_info("[" LOG_NAME "] Received attestationResult is: [ %s ]", attestationResult);
+    charra_log_info("[" LOG_NAME "] Seeding the random number generator...");
 
     if( ( ret = mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, &entropy,
                                (const unsigned char *) pers,
@@ -386,7 +383,7 @@ CHARRA_RC charra_sign_att_result()
 
     charra_log_info("[" LOG_NAME "] Reading private key from '%s'", peer_private_key_path );
 
-	if( ( ret = mbedtls_pk_parse_keyfile( &pk, peer_private_key_path, "" ) ) != 0 )
+	if( ( ret = mbedtls_pk_parse_keyfile( &peer_private_key, peer_private_key_path, "" ) ) != 0 )
     {
         charra_log_info("[" LOG_NAME "] Could not read '%s'\n", peer_private_key_path );
         goto exit;
@@ -398,74 +395,109 @@ CHARRA_RC charra_sign_att_result()
      */
     charra_log_info("[" LOG_NAME "] Generating the SHA-256 signature");
 
-    if( ( ret = mbedtls_md( mbedtls_md_info_from_type( MBEDTLS_MD_SHA256 ), text_to_sign, ilen, hash ) ) != 0 )
-    {
-        charra_log_info("[" LOG_NAME "] Could read %s", text_to_sign );
-        goto exit;
-    }	
+	/* hash data */
+	if ((ret = charra_crypto_hash(
+			 MBEDTLS_MD_SHA256, att_result, att_result_len, hash)) != CHARRA_RC_SUCCESS) {
+		goto exit;
+	}
 
-	
-     if( ( ret = mbedtls_pk_sign( &pk, MBEDTLS_MD_SHA256, hash, 0, buf, &olen, mbedtls_ctr_drbg_random, &ctr_drbg ) ) != 0 )								 
-    {
+	/* sign data */
+     if( ( ret = mbedtls_pk_sign( &peer_private_key, MBEDTLS_MD_SHA256,
+	 		hash, 0, sig_buffer, &sig_buffer_len, mbedtls_ctr_drbg_random, &ctr_drbg ) ) != 0 )	{
          charra_log_info("[" LOG_NAME "] mbedtls_pk_sign returned -0x%04x\n", (unsigned int) -ret );
          goto exit;
     }
 
-//// OKAY 
-    charra_log_debug("[" LOG_NAME "] Generated signature lenght %d:", olen);
-    charra_log_debug("[" LOG_NAME "] Generated HASH of lenght %d:", sizeof(hash));
+	memcpy(signature, sig_buffer, sig_buffer_len);
+	*sig_size = sig_buffer_len;
+	// *sig_size = sizeof(sig_buffer);
+
+	charra_log_debug("[" LOG_NAME "] att_result is: [ %s ]", att_result);
+	charra_log_debug("[" LOG_NAME "] att_result_len is: [ %d ]", att_result_len);
+    charra_log_debug("[" LOG_NAME "] Generated signature lenght: %d - %d", sig_buffer_len, sizeof(sig_buffer));
+
+    charra_log_debug("[" LOG_NAME "] Generated HASH of lenght: %d", sizeof(hash));
 	charra_print_hex(CHARRA_LOG_INFO, sizeof(hash), hash,
-		"                                                         0x", "\n", false);
+		"  hash generated                                         0x", "\n", false);
 
-    charra_log_debug("[" LOG_NAME "] Generated signature total of lenght = %d", sizeof(buf));
-	charra_print_hex(CHARRA_LOG_INFO, sizeof(buf), buf,
-		"                                                         0x", "\n", false);
+    charra_log_debug("[" LOG_NAME "] Generated signature total of lenght = %d", sizeof(sig_buffer));
+	charra_print_hex(CHARRA_LOG_INFO,  sig_buffer_len, signature,
+		"  signature generated                                    0x", "\n", false);
 
+    exit_code = CHARRA_RC_SUCCESS;
 
-//// Verifying
+exit:
+    mbedtls_pk_free( &peer_private_key);
+    mbedtls_ctr_drbg_free( &ctr_drbg );
+    mbedtls_entropy_free( &entropy );
+
+    return exit_code;
+}
+
+CHARRA_RC charra_verify_att_result(char* peer_public_key_path, 
+	char* attestationResult, unsigned char signature[], size_t sig_size)
+{
+
+/// Verifying
 // From RP:
 // send: Path_to_verifier_pub_key, attestationResult, signature
 // return: SUCESS or FAIL
 
-    // mbedtls_pk_context pbk;
- 	// mbedtls_pk_init( &pbk );
+	int ret = 1;
+    int exit_code = CHARRA_RC_ERROR;
 
-    // if( ( ret = mbedtls_pk_parse_public_keyfile( &pbk, peer_public_key_path) ) != 0 )
-    // {
-    //     charra_log_info("[" LOG_NAME "] Could not read '%s'\n", peer_public_key_path );
-    //     goto exit;
-    // }
+	unsigned char hash[32];
+    const unsigned char (*att_result)[] = attestationResult;
+    size_t att_result_len = sizeof(att_result);
 
-	// if( ( ret = mbedtls_md(
-	// 	        mbedtls_md_info_from_type( MBEDTLS_MD_SHA256 ), 
-	// 			text_to_sign, ilen, hash_v ) ) != 0 )
-	// 	{
-	// 		charra_log_info("[" LOG_NAME "] Could read %s", text_to_sign );
-	// 		goto exit;
-	// 	}	
+    mbedtls_pk_context peer_public_key;  
+    mbedtls_pk_init (&peer_public_key);
 
-    // charra_log_debug("[" LOG_NAME "] Generated HASH of lenght %d:", sizeof(hash_v));
-	// charra_print_hex(CHARRA_LOG_INFO, sizeof(hash_v), hash_v,
-	// 	"                                                         0x", "\n", false);
+	charra_log_info("[" LOG_NAME "] Recieved attestationResult:  [ %s ]", attestationResult);
+	charra_log_info("[" LOG_NAME "] Recieved attestationResult:  [ %d ]", sig_size);
+ 	charra_log_info("[" LOG_NAME "] Reading public key from '%s'", peer_public_key_path );
+
+    if( ( ret = mbedtls_pk_parse_public_keyfile( &peer_public_key, peer_public_key_path) ) != 0 )
+    {
+        charra_log_error("[" LOG_NAME "] Could not read '%s'\n", peer_public_key_path );
+        goto exit;
+    }
+
+   
+	/* hash data */
+	if ((ret = charra_crypto_hash(
+			 MBEDTLS_MD_SHA256, att_result, att_result_len, hash)) != CHARRA_RC_SUCCESS) {
+		goto exit;
+	}
+	
+	charra_log_debug("[" LOG_NAME "] Generated HASH of lenght %d:", sizeof(hash));
+	charra_log_debug("[" LOG_NAME "] Generated sig_size of lenght %ld:", sig_size);
+
+	charra_print_hex(CHARRA_LOG_INFO, sizeof(hash), hash,
+		" hash regenerated                                        0x", "\n", false);
 
 
-    // if( ( ret = mbedtls_pk_verify( &pbk, MBEDTLS_MD_SHA256, hash_v, 0,
-    //                        buf, olen ) ) != 0 )
-    // {
-    //     mbedtls_printf( " failed\n  ! mbedtls_pk_verify returned -0x%04x\n", (unsigned int) -ret );
-    //     goto exit;
-    // }
-
-    //  charra_log_info("[" LOG_NAME "] Signature is valid)" );
+	charra_print_hex(CHARRA_LOG_INFO, sig_size, signature,
+		" signature to verify                                     0x", "\n", false);
 
 
+    charra_log_debug("[" LOG_NAME "] signature_len is %d", sig_size);
+
+    if( ( ret = mbedtls_pk_verify( &peer_public_key, MBEDTLS_MD_SHA256, hash, 0,
+                           signature, sig_size ) ) != CHARRA_RC_SUCCESS )
+    {
+         charra_log_error("[" LOG_NAME "] FAILED: mbedtls_pbk_verify returned -0x%04x", (unsigned int) -ret );
+		 mbedtls_strerror( ret, (char *) signature, 1024 );
+         charra_log_error("[" LOG_NAME "] Last error was: %s", signature );
+        goto exit;
+    }
+
+
+    charra_log_info("[" LOG_NAME "] Signature is valid!");
     exit_code = CHARRA_RC_SUCCESS;
-	return exit_code;
 
 exit:
-    mbedtls_pk_free( &pk );
-    mbedtls_ctr_drbg_free( &ctr_drbg );
-    mbedtls_entropy_free( &entropy );
+    mbedtls_pk_free(&peer_public_key);
 
-    // mbedtls_exit( exit_code );
-};
+    return  exit_code;
+}

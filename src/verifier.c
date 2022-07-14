@@ -806,29 +806,49 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
  	charra_log_trace("[" LOG_NAME "] Preparing ATTESTEATION RESULT for Attester (%d)", attestation_rp); 
 	// create_appraisal_result(result);
 
-	charra_log_info ("[" LOG_NAME "]  Creating Appraisal Structure.");
-
 	char* attestationResult = NULL;
 	if (attestation_rc == 0) { 
 		attestationResult = "valid";
 	} else {
 		attestationResult = "invalid";
 	};
+    
+	size_t signature_len = 0;
+	unsigned char signature[1024];
+	charra_log_info("[" LOG_NAME "] Sending attestatioResult [ %s ] to be signed ", attestationResult);
 
-	// size_t signature_len = 0;
-	// unsigned char signature = "";
-	charra_log_debug("[" LOG_NAME "] SIGNING BEGIN");
-    // char ret = charra_sign_att_result(dtls_rpk_private_key_path, attestationResult, signature, signature_len);
-    char ret = charra_sign_att_result();
-    charra_log_debug("[" LOG_NAME "] SIGNING END %s", ret);
+    if ((charra_sign_att_result(dtls_rpk_private_key_path, attestationResult, signature, &signature_len) != 0)) {
+		charra_log_error("[" LOG_NAME "] error signing attestation result.");
+		result = CHARRA_RC_CRYPTO_ERROR;
+		goto cleanup;
+	}
+	
+	charra_log_info("[" LOG_NAME "]  attestatioResult signed ");
 
+
+	/* This code can be used to verify if the signature is valid before marshal and send it to attester */
+    // charra_log_info("[" LOG_NAME "] Verifying Signature");
+ 	// if ((charra_verify_att_result(dtls_rpk_public_key_path, attestationResult, signature, signature_len) !=0)) {
+	// 	charra_log_error("[" LOG_NAME "] error verifing signature attestation result.");
+	// 	result = CHARRA_RC_CRYPTO_ERROR;
+	// 	goto cleanup;
+	// } else { 
+	// 	charra_log_info("[" LOG_NAME "] Signature VALID");
+	// 		charra_print_hex(CHARRA_LOG_INFO, signature_len, signature,
+	// 	"  signature received                                     0x", "\n", false);
+ 	
+	// }
+
+	charra_log_info ("[" LOG_NAME "]  Creating Appraisal Structure.");
+	
     msg_attestation_appraise_result_dto att_result = {
 		.attestation_result_data_len = sizeof(attestationResult),
 		.attestation_result_data = attestationResult,
+		.attestation_signature = signature,
+		.attestation_signature_len = signature_len,
 		};
 
-	/* define needed variables */
-	//msg_attestation_appraise_result_dto ares= {0};
+
 	uint8_t* ares_buf = NULL; 
 	uint32_t ares_buf_len = 0;
 	
@@ -857,13 +877,13 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 		goto cleanup;
 	}
 
-	/* marshal attestation request */
+	/* marshal attestation result */
 	charra_log_info(
-		"[" LOG_NAME "] Marshaling attestation request data to CBOR.");
+		"[" LOG_NAME "] Marshaling attestationResult data to CBOR.");
 	if ((result = charra_marshal_attestation_result(
 			 &att_result, &ares_buf_len, &ares_buf)) != CHARRA_RC_SUCCESS) {
 		charra_log_error(
-			"[" LOG_NAME "] Marshaling attestation request data failed.");
+			"[" LOG_NAME "] Marshaling attestation result data failed.");
 		goto cleanup;
 	}
 

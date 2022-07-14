@@ -91,8 +91,31 @@ CHARRA_RC charra_crypto_rsa_verify_signature(
 CHARRA_RC compute_and_check_PCR_digest(uint8_t** pcr_values,
 	uint32_t pcr_value_len, const TPMS_ATTEST* const attest_struct);
 
-CHARRA_RC charra_sign_att_result();
-// CHARRA_RC charra_sign_att_result(char* peer_private_key_path, char attestationResult);
-	// char buf, size_t olen);
+
+/**
+ * @brief Compute composite digest from attestationResult value using the verifier
+ * private key file.
+ *
+ * @param peer_private_key_path Local path to Private key file. 
+ * @param attestationResult hold the result of attestation apraised 
+ * @returns signature array where signature will return
+ * @returns signarute_len is the calculated lenght of signature
+ * @returns CHARRA_RC_SUCCESS on succes, CHARRA_RC_ERROR on error
+ */
+CHARRA_RC charra_sign_att_result(char* peer_private_key_path, char* attestationResult,
+	unsigned char signature[], size_t* signature_size);
+
+/**
+ * @brief Verify the signature of attestationResult value using the verifier
+ * prublic key file.
+ *
+ * @param peer_public_key_path Local path to Public key file. 
+ * @param attestationResult hold the result of attestation apraised needed to calculate hash  again
+ * @returns signature array where signature is
+ * @returns signarute_len is the calculated lenght of signature
+ * @returns CHARRA_RC_SUCCESS on succes, CHARRA_RC_ERROR on error
+ */
+CHARRA_RC charra_verify_att_result(char* peer_public_key_path, char* attestationResult, 
+	unsigned char signature[], size_t signature_size);
 
 #endif /* SITIMA_CRYPTO_H */

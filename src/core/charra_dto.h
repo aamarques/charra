@@ -98,16 +98,11 @@ typedef struct {
 } msg_attestation_response_dto;
 
 
-// typedef struct {
-// 	bool attestation;
-// 	struct msg_attestation_response_dto{} attestation_response;
-// } msg_attestation_appraise_result_dto;
-
 typedef struct {
     uint32_t attestation_result_data_len;
-	char* attestation_result_data;
-	unsigned char signature;
-	uint32_t signature_len;
+	uint8_t* attestation_result_data;
+	uint8_t* attestation_signature;
+	size_t attestation_signature_len;
 } msg_attestation_appraise_result_dto;
 
 // typedef struct {

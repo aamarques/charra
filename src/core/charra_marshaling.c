@@ -486,8 +486,10 @@ static CHARRA_RC charra_marshal_attestation_result_internal(
 	/* verify input */
 	assert(attestation_result != NULL);
 	assert(attestation_result->attestation_result_data_len != 0);
-	charra_log_trace("%s() %d", __func__, attestation_result->attestation_result_data);
 	assert(attestation_result->attestation_result_data != NULL);
+	assert(attestation_result->attestation_signature_len != 0);
+	assert(attestation_result->attestation_signature != NULL);
+
 	charra_log_trace("%s() %d", __func__, 2);
 
 	QCBOREncodeContext ec = {0};
@@ -510,9 +512,16 @@ static CHARRA_RC charra_marshal_attestation_result_internal(
 
 	charra_log_trace("%s() %d", __func__, 5);
 
+	/* encode "attestation-signature" */
+	UsefulBufC attestation_sig = {
+		.ptr = attestation_result->attestation_signature,
+		.len = attestation_result->attestation_signature_len};
+
+	charra_log_trace("%s() %d", __func__, 6);
+	QCBOREncode_AddBytes(&ec, attestation_sig);
+
 	/* close array: root_array_encoder */
 	QCBOREncode_CloseArray(&ec);
-
 
 	if (QCBOREncode_Finish(&ec, buf_out) == QCBOR_SUCCESS) {
 		return CHARRA_RC_SUCCESS;
@@ -552,8 +561,12 @@ CHARRA_RC charra_marshal_attestation_result(
 	/* verify input */
 	assert(attestation_result != NULL);
 	assert(attestation_result->attestation_result_data_len != 0);
-	charra_log_trace("Attestatio Result %d", attestation_result->attestation_result_data);
 	assert(attestation_result->attestation_result_data != NULL);
+	assert(attestation_result->attestation_signature != NULL);
+	assert(attestation_result->attestation_signature_len != 0);
+
+	charra_log_trace("Attestation Result    [ %s ] ", attestation_result->attestation_result_data);
+	charra_log_trace("Attestation signature [ %d ] ", attestation_result->attestation_signature);
 
 	/* compute size of marshaled data */
 	UsefulBuf buf_in = {.len = 0, .ptr = NULL};
@@ -608,7 +621,7 @@ CHARRA_RC charra_unmarshal_attestation_passport(
 	
 	charra_log_trace("CBOR parser: %s", qcbor_err_to_str(cborerr));
 
-	/* parse "attestation-data" (bytes) */
+	/* parse "attestationResult" (bytes) */
 	charra_log_trace("CBOR parser: attestation-result-data");
 	if ((cborerr = charra_cbor_get_next(&dc, &item, QCBOR_TYPE_BYTE_STRING)))
 		goto cbor_parse_error;
@@ -620,15 +633,34 @@ CHARRA_RC charra_unmarshal_attestation_passport(
 	if (att_data == NULL) {
 		goto cbor_parse_error;
 	} else {
-		att.attestation_result_data = att_data;  // zoeira aqui
+		att.attestation_result_data = att_data;  
 		if (memcpy(att.attestation_result_data, item.val.string.ptr, att.attestation_result_data_len) ==
 			NULL) {
 			goto cbor_parse_error;
 		}
 	}
 
-	charra_log_trace("CBOR parser: %s", qcbor_err_to_str(cborerr));
+	/* parse "attestation-signature" (bytes) */
+	charra_log_trace("CBOR parser: attestation-signature");
 
+	if ((cborerr = charra_cbor_get_next(&dc, &item, QCBOR_TYPE_BYTE_STRING)))
+		goto cbor_parse_error;
+
+	att.attestation_signature_len = item.val.string.len;
+	uint8_t* att_sig = (uint8_t*)malloc(att.attestation_signature_len);
+
+	if (att_sig == NULL) {
+		goto cbor_parse_error;
+	} else {
+		att.attestation_signature = att_sig;  
+		if (memcpy(att.attestation_signature, item.val.string.ptr, att.attestation_signature_len) ==
+			NULL) {
+			goto cbor_parse_error;
+		}
+	}
+
+	charra_log_trace("CBOR parser: %s", qcbor_err_to_str(cborerr));
+	
 	if ((cborerr = QCBORDecode_Finish(&dc))) {
 		charra_log_error("CBOR parser: expected end of input, but could not "
 						 "find it. Continuing.");
@@ -645,7 +677,6 @@ cbor_parse_error:
 	charra_log_info("CBOR parser: skipping parsing.");
 
 	/* clean up */
-	// charra_free_if_not_null(event_log);
 
 	return CHARRA_RC_MARSHALING_ERROR;
 
