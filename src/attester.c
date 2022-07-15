@@ -93,9 +93,9 @@ static void release_data(
 	struct coap_session_t* session CHARRA_UNUSED, void* app_ptr);
 
 static void coap_attestation_results_handler(struct coap_context_t* ctx CHARRA_UNUSED,
-	struct coap_resource_t* resource, struct coap_session_t* session,
-	struct coap_pdu_t* in, struct coap_binary_t* token,
-	struct coap_string_t* query, struct coap_pdu_t* out);
+	struct coap_resource_t* resource CHARRA_UNUSED, struct coap_session_t* session CHARRA_UNUSED,
+	struct coap_pdu_t* in, struct coap_binary_t* token CHARRA_UNUSED,
+	struct coap_string_t* query CHARRA_UNUSED, struct coap_pdu_t* out CHARRA_UNUSED);
 
 static void coap_attest_handler(struct coap_context_t* ctx,
 	struct coap_resource_t* resource, struct coap_session_t* session,
@@ -308,10 +308,10 @@ static void release_data(
 // Based on some previous charra functions 
 //
 static void coap_attestation_results_handler(struct coap_context_t* ctx CHARRA_UNUSED,
-	struct coap_resource_t* resource, struct coap_session_t* session,
-	struct coap_pdu_t* in, struct coap_binary_t* token,
-	struct coap_string_t* query, struct coap_pdu_t* out) {
-
+	struct coap_resource_t* resource CHARRA_UNUSED, struct coap_session_t* session CHARRA_UNUSED,
+	struct coap_pdu_t* in, struct coap_binary_t* token CHARRA_UNUSED,
+	struct coap_string_t* query CHARRA_UNUSED, struct coap_pdu_t* out CHARRA_UNUSED) {
+	
 	/* --- receive incoming data --- */
 
 	charra_log_info("[" LOG_NAME "] +-----------------------------------+");

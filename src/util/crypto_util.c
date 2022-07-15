@@ -31,6 +31,7 @@
 #include "mbedtls/md.h"
 #include "mbedtls/pk.h"
 #include "mbedtls/platform.h"
+#include "mbedtls/error.h"
 
 #include <tss2/tss2_tpm2_types.h>
 
@@ -346,7 +347,7 @@ CHARRA_RC compute_and_check_PCR_digest(uint8_t** pcr_values,
 
 
 CHARRA_RC charra_sign_att_result(char* peer_private_key_path, 
-	char* attestationResult, unsigned char signature[], size_t* sig_size)
+	unsigned char* attestationResult, unsigned char signature[], size_t* sig_size)
 {
 
 // From: Verifier
@@ -366,7 +367,8 @@ CHARRA_RC charra_sign_att_result(char* peer_private_key_path,
     unsigned char hash[32];
     unsigned char sig_buffer[MBEDTLS_PK_SIGNATURE_MAX_SIZE];
 	size_t sig_buffer_len = 0;
-    unsigned char (*att_result)[] = attestationResult;
+    // const unsigned char (*att_result)[] = attestationResult;
+	const unsigned char *att_result = attestationResult;
     const char *pers = "mbedtls_pk_sign";
     size_t att_result_len = sizeof(attestationResult);
     
@@ -435,7 +437,7 @@ exit:
 }
 
 CHARRA_RC charra_verify_att_result(char* peer_public_key_path, 
-	char* attestationResult, unsigned char signature[], size_t sig_size)
+	unsigned char* attestationResult, unsigned char signature[], size_t sig_size)
 {
 
 /// Verifying
@@ -447,7 +449,7 @@ CHARRA_RC charra_verify_att_result(char* peer_public_key_path,
     int exit_code = CHARRA_RC_ERROR;
 
 	unsigned char hash[32];
-    const unsigned char (*att_result)[] = attestationResult;
+    const unsigned char *att_result = attestationResult;
     size_t att_result_len = sizeof(att_result);
 
     mbedtls_pk_context peer_public_key;  

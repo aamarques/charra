@@ -25,6 +25,7 @@
 typedef enum {
 	VERIFIER,
 	ATTESTER,
+	RPARTY,
 } cli_parser_caller;
 
 /**
@@ -53,6 +54,14 @@ typedef struct {
 } cli_config_attester;
 
 /**
+ * A structure holding pointers to variables of the relying party
+ * which might geht modified by the CLI parser
+ */
+typedef struct {
+	char** dtls_psk_hint;
+} cli_config_rparty;
+
+/**
  * A structure holding pointers to variables of the verifier
  * which might geht modified by the CLI parser
  */
@@ -76,6 +85,7 @@ typedef struct {
 	cli_config_common common_config;
 	cli_config_attester attester_config;
 	cli_config_verifier verifier_config;
+	cli_config_rparty   rparty_config;
 } cli_config;
 
 /**

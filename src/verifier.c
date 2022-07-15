@@ -115,14 +115,6 @@ int  send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_ses
 static msg_attestation_request_dto last_request = {0};
 static msg_attestation_response_dto last_response = {0};
 
-// passport
-// static CHARRA_RC create_appraisal_result(
-// 	msg_attestation_response_dto* att_response);
-
-// static CHARRA_RC create_appraisal_result(uint8_t attestation_result);
-// static msg_attestation_appraise_result_dto last_passport_result = {0};
-
-
 /* --- main --------------------------------------------------------------- */
 
 int main(int argc, char** argv) {
@@ -804,7 +796,6 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 	CHARRA_RC result = EXIT_FAILURE;
 
  	charra_log_trace("[" LOG_NAME "] Preparing ATTESTEATION RESULT for Attester (%d)", attestation_rp); 
-	// create_appraisal_result(result);
 
 	char* attestationResult = NULL;
 	if (attestation_rc == 0) { 
@@ -816,8 +807,9 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 	size_t signature_len = 0;
 	unsigned char signature[1024];
 	charra_log_info("[" LOG_NAME "] Sending attestatioResult [ %s ] to be signed ", attestationResult);
+	charra_log_info("[" LOG_NAME "] Private key path : [ %s ]", dtls_rpk_private_key_path);
 
-    if ((charra_sign_att_result(dtls_rpk_private_key_path, attestationResult, signature, &signature_len) != 0)) {
+    if ((charra_sign_att_result(dtls_rpk_private_key_path, (unsigned char *) attestationResult, signature, &signature_len) != 0)) {
 		charra_log_error("[" LOG_NAME "] error signing attestation result.");
 		result = CHARRA_RC_CRYPTO_ERROR;
 		goto cleanup;
@@ -843,7 +835,7 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 	
     msg_attestation_appraise_result_dto att_result = {
 		.attestation_result_data_len = sizeof(attestationResult),
-		.attestation_result_data = attestationResult,
+		.attestation_result_data = (unsigned char *) attestationResult,
 		.attestation_signature = signature,
 		.attestation_signature_len = signature_len,
 		};

@@ -629,7 +629,7 @@ CHARRA_RC charra_unmarshal_attestation_passport(
 	charra_log_trace("CBOR parser: %s", qcbor_err_to_str(cborerr));
 
 	att.attestation_result_data_len = item.val.string.len;
-	uint8_t* att_data = (uint8_t*)malloc(att.attestation_result_data);
+	uint8_t* att_data = (uint8_t*)malloc(att.attestation_result_data_len);
 	if (att_data == NULL) {
 		goto cbor_parse_error;
 	} else {

@@ -89,7 +89,7 @@ static void coap_attest_result_handler();
 
 /* --- main --------------------------------------------------------------- */
 
-int main() {
+int main(int argc, char** argv) {
 	int result = EXIT_FAILURE;
 
 	/* handle SIGINT */
@@ -106,7 +106,7 @@ int main() {
 		(const char*)getenv("LOG_LEVEL_COAP"), &coap_log_level);
 
 	/* initialize structures to pass to the CLI parser */
-	/* cli_config cli_config = {
+	cli_config cli_config = {
 		.caller = RPARTY,
 		.common_config =
 			{
@@ -127,15 +127,15 @@ int main() {
 				.dtls_psk_hint = &dtls_psk_hint,
 			},
 	};
-	*/
+	
 
 	/* parse CLI arguments */
-	/*
+	
 	if ((result = parse_command_line_arguments(argc, argv, &cli_config)) != 0) {
 		// 1 means help message is displayed, -1 means error
 		return (result == 1) ? EXIT_SUCCESS : EXIT_FAILURE;
 	}
-	*/
+	
 	
 	/* set CHARRA and libcoap log levels */
 	charra_log_set_level(charra_log_level);
@@ -237,7 +237,7 @@ int main() {
 				"] Cannot create CoAP server endpoint based on DTLS-RPK.\n");
 			goto error;
 		}
-	} else {    /* CRIA UM ENDPOINT (coap_context, &addr, coap_protocol) */
+	} else {    
 		charra_log_info(
 			"[" LOG_NAME "] Creating CoAP server endpoint using UDP.");
 		if ((coap_endpoint = charra_coap_new_endpoint(
@@ -249,7 +249,7 @@ int main() {
 		}
 	}
 
-	/* REGISTRA NOVO RECURSO E NOVO HANDLER */
+	/* New resource and handler */
 	charra_log_info("[" LOG_NAME "] Registering CoAP [relying_party] resources.");
 	charra_coap_add_resource(
  	 	coap_context, COAP_REQUEST_FETCH, "attRes", coap_attest_result_handler);
@@ -286,7 +286,6 @@ finish:
 
 static void handle_sigint(int signum CHARRA_UNUSED) { quit = true; }
 
-// TEST BEGIN
 static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNUSED,
 	coap_session_t* session CHARRA_UNUSED, coap_pdu_t* sent CHARRA_UNUSED,
 	coap_pdu_t* in, const coap_mid_t mid CHARRA_UNUSED) {
@@ -339,16 +338,16 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 	charra_log_debug("[" LOG_NAME "]     data_len %d", data_len); 
 	charra_log_debug("[" LOG_NAME "]     data = < %s >", att_result.attestation_result_data); 
 	charra_log_debug("[" LOG_NAME "]     signature_len %d", att_result.attestation_signature_len ); 
+	charra_log_info("[" LOG_NAME "] Public key path [ %s ]", dtls_rpk_peer_public_key_path ); 
 
  	if ((charra_verify_att_result(dtls_rpk_peer_public_key_path, att_result.attestation_result_data, 
 		att_result.attestation_signature, att_result.attestation_signature_len) !=0)) {
 		charra_log_error("[" LOG_NAME "] error verifing signature attestation result.");
-		return CHARRA_RC_ERROR;
 	} else {
 		charra_log_info("[" LOG_NAME "] +-----------------------------------+");
 		charra_log_info("[" LOG_NAME "] |      PASSPORT MODEL VALIDATED     |");
 		charra_log_info("[" LOG_NAME "] +-----------------------------------+");
 	}
 }
-// TEST END
+
 

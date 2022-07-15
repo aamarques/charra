@@ -102,7 +102,7 @@ CHARRA_RC compute_and_check_PCR_digest(uint8_t** pcr_values,
  * @returns signarute_len is the calculated lenght of signature
  * @returns CHARRA_RC_SUCCESS on succes, CHARRA_RC_ERROR on error
  */
-CHARRA_RC charra_sign_att_result(char* peer_private_key_path, char* attestationResult,
+CHARRA_RC charra_sign_att_result(char* peer_private_key_path, unsigned char* attestationResult,
 	unsigned char signature[], size_t* signature_size);
 
 /**
@@ -115,7 +115,7 @@ CHARRA_RC charra_sign_att_result(char* peer_private_key_path, char* attestationR
  * @returns signarute_len is the calculated lenght of signature
  * @returns CHARRA_RC_SUCCESS on succes, CHARRA_RC_ERROR on error
  */
-CHARRA_RC charra_verify_att_result(char* peer_public_key_path, char* attestationResult, 
+CHARRA_RC charra_verify_att_result(char* peer_public_key_path, unsigned char* attestationResult, 
 	unsigned char signature[], size_t signature_size);
 
 #endif /* SITIMA_CRYPTO_H */

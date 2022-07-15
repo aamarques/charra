@@ -100,7 +100,7 @@ typedef struct {
 
 typedef struct {
     uint32_t attestation_result_data_len;
-	uint8_t* attestation_result_data;
+	unsigned char* attestation_result_data;
 	uint8_t* attestation_signature;
 	size_t attestation_signature_len;
 } msg_attestation_appraise_result_dto;

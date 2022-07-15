@@ -59,9 +59,14 @@ int parse_command_line_arguments(int argc, char** argv, cli_config* variables) {
 	char* log_name;
 	if (caller == VERIFIER) {
 		log_name = "verifier";
-	} else {
+
+	} else if (caller == ATTESTER) {
 		log_name = "attester";
+	} else {
+		log_name = "relying_party";
 	}
+	
+
 	for (;;) {
 		int index = -1;
 		int identifier = getopt_long(argc, argv,
@@ -142,7 +147,7 @@ int parse_command_line_arguments(int argc, char** argv, cli_config* variables) {
 				printf(
 					" -i, --identity=IDENTITY:        Use IDENTITY as identity "
 					"for DTLS. Implicitly enables DTLS-PSK.\n");
-			} else {
+			} else if (caller == ATTESTER) {
 				printf("     --port=PORT:                Open PORT instead of "
 					   "port "
 					   "%d.\n",
@@ -157,7 +162,23 @@ int parse_command_line_arguments(int argc, char** argv, cli_config* variables) {
 					   "key for DTLS. Implicitly enables DTLS-PSK.\n");
 				printf(" -h, --hint=HINT:                Use HINT as hint for "
 					   "DTLS. Implicitly enables DTLS-PSK.\n");
+			} else {
+				printf("     --port=PORT:                Open PORT instead of "
+					   "port "
+					   "%d.\n",
+					*(variables->common_config.port));
+				printf("DTLS-PSK Options:\n");
+				printf(" -p, --psk:                      Enable DTLS protocol "
+					   "with PSK. "
+					   "By default the key '%s' and hint '%s' are used.\n",
+					*variables->common_config.dtls_psk_key,
+					*variables->rparty_config.dtls_psk_hint);
+				printf(" -k, --key=KEY:                  Use KEY as pre-shared "
+					   "key for DTLS. Implicitly enables DTLS-PSK.\n");
+				printf(" -h, --hint=HINT:                Use HINT as hint for "
+					   "DTLS. Implicitly enables DTLS-PSK.\n");
 			}
+
 			printf("DTLS-RPK Options:\n");
 			printf("                                 Charra includes default "
 				   "'keys' in the keys folder, but these are only intended for "
@@ -444,6 +465,15 @@ int parse_command_line_arguments(int argc, char** argv, cli_config* variables) {
 			char* hint = malloc(length * sizeof(char));
 			strcpy(hint, optarg);
 			*(variables->attester_config.dtls_psk_hint) = hint;
+			continue;
+		}
+
+		else if (caller == RPARTY && identifier == 'n') {
+			*variables->common_config.use_dtls_psk = true;
+			uint32_t length = strlen(optarg);
+			char* hint = malloc(length * sizeof(char));
+			strcpy(hint, optarg);
+			*(variables->rparty_config.dtls_psk_hint) = hint;
 			continue;
 		}
 
