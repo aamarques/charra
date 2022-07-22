@@ -59,6 +59,8 @@ charra_log_t charra_log_level = CHARRA_LOG_INFO;
 static const char LISTEN_ADDRESS[] = "0.0.0.0";
 static const char LISTEN_RP[] = "172.18.0.2";
 static unsigned int port = COAP_DEFAULT_PORT; // default port 5683
+static unsigned int port_rp = COAP_DEFAULT_PORT; 
+
 #define CBOR_ENCODER_BUFFER_LENGTH 20480	  // 20 KiB should be sufficient
 bool use_ima_event_log = false;
 char* ima_event_log_path =
@@ -66,6 +68,7 @@ char* ima_event_log_path =
 bool use_dtls_psk = false;
 char* dtls_psk_key = "Charra DTLS Key";
 char* dtls_psk_hint = "Charra Attester";
+char* dtls_psk_identity = "Charra Attester";
 // TODO allocate memory for CBOR buffer using malloc() since logs can be huge
 
 // for DTLS-RPK
@@ -73,6 +76,7 @@ bool use_dtls_rpk = false;
 char* dtls_rpk_private_key_path = "keys/attester.der";
 char* dtls_rpk_public_key_path = "keys/attester.pub.der";
 char* dtls_rpk_peer_public_key_path = "keys/verifier.pub.der";
+char* dtls_rpk_peer2_public_key_path = "keys/rparty.pub.der";
 bool dtls_rpk_verify_peer_public_key = true;
 
 // some vars
@@ -92,10 +96,10 @@ static void handle_sigint(int signum);
 static void release_data(
 	struct coap_session_t* session CHARRA_UNUSED, void* app_ptr);
 
-static void coap_attestation_results_handler(struct coap_context_t* ctx CHARRA_UNUSED,
-	struct coap_resource_t* resource CHARRA_UNUSED, struct coap_session_t* session CHARRA_UNUSED,
+static void coap_attestation_results_handler(struct coap_context_t* ctx,
+	struct coap_resource_t* resource, struct coap_session_t* session,
 	struct coap_pdu_t* in, struct coap_binary_t* token CHARRA_UNUSED,
-	struct coap_string_t* query CHARRA_UNUSED, struct coap_pdu_t* out CHARRA_UNUSED);
+	struct coap_string_t* query CHARRA_UNUSED, struct coap_pdu_t* out);
 
 static void coap_attest_handler(struct coap_context_t* ctx,
 	struct coap_resource_t* resource, struct coap_session_t* session,
@@ -247,7 +251,7 @@ int main(int argc, char** argv) {
 				"] Cannot create CoAP server endpoint based on DTLS-RPK.\n");
 			goto error;
 		}
-	} else {    /* CRIA UM ENDPOINT (coap_context, &addr, coap_protocol) */
+	} else {    
 		charra_log_info(
 			"[" LOG_NAME "] Creating CoAP server endpoint using UDP.");
 		if ((coap_endpoint = charra_coap_new_endpoint(
@@ -302,122 +306,6 @@ static void handle_sigint(int signum CHARRA_UNUSED) { quit = true; }
 static void release_data(
 	struct coap_session_t* session CHARRA_UNUSED, void* app_ptr) {
 	charra_free_and_null(app_ptr);
-}
-
-// PASSPORT MODEL SENDING MESSAGE TO RP - BEGIN 
-// Based on some previous charra functions 
-//
-static void coap_attestation_results_handler(struct coap_context_t* ctx CHARRA_UNUSED,
-	struct coap_resource_t* resource CHARRA_UNUSED, struct coap_session_t* session CHARRA_UNUSED,
-	struct coap_pdu_t* in, struct coap_binary_t* token CHARRA_UNUSED,
-	struct coap_string_t* query CHARRA_UNUSED, struct coap_pdu_t* out CHARRA_UNUSED) {
-	
-	/* --- receive incoming data --- */
-
-	charra_log_info("[" LOG_NAME "] +-----------------------------------+");
-	charra_log_info("[" LOG_NAME "] |  VERIFIER ATTESTATION RECEIVED    |");
-	charra_log_info("[" LOG_NAME "] +-----------------------------------+");
-
-	// Variables
-	int coap_r = 0;
-	size_t data_len = 0;
-	const uint8_t* data = NULL;
-	size_t data_offset = 0;
-	size_t data_total_len = 0;
-	uint8_t coap_mediatype_cbor_buf2[4] = {0};
-	unsigned int coap_mediatype_cbor_buf_len2 = 0;
-
-	coap_pdu_t* pdu2 = NULL;
-	coap_mid_t mid2 = COAP_INVALID_MID;
-	coap_optlist_t* coap_options2 = NULL;
-
-	if ((coap_r = coap_get_data_large(
-			 in, &data_len, &data, &data_offset, &data_total_len)) == 0) {
-		charra_log_error("[" LOG_NAME "] Could not get CoAP PDU data.");
-		// goto error;
-	} else {
-		charra_log_info(
-			"[" LOG_NAME "] Received data of length %zu.", data_len);
-		charra_log_info("[" LOG_NAME "] Received data of total length %zu.",
-			data_total_len);
-	}
-
-	charra_log_info("[" LOG_NAME "] Calling Relying Party.");
-
-	charra_log_info(
-		"[" LOG_NAME "] Creating CoAP client session using UDP.");
-	if ((coap_session = charra_coap_new_client_session(
-				ctx, LISTEN_RP, COAP_DEFAULT_PORT, COAP_PROTO_UDP)) == NULL) {
-		charra_log_error(
-			"[" LOG_NAME "] Cannot create client session based on UDP.");
-		result = CHARRA_RC_COAP_ERROR;
-		goto cleanup;
-	}
-
-	/* create CoAP option for content type */
-	if ((coap_mediatype_cbor_buf_len2 = coap_encode_var_safe(
-			 coap_mediatype_cbor_buf2, sizeof(coap_mediatype_cbor_buf2),
-			 COAP_MEDIATYPE_APPLICATION_CBOR)) == 0) {
-		charra_log_error(
-			"[" LOG_NAME "] Cannot create option for CONTENT_TYPE.");
-		result = CHARRA_RC_COAP_ERROR;
-		goto cleanup;
-	}
-
-	/* create CoAP context */
-	charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
-	if ((ctx = charra_coap_new_context(true)) == NULL) {
-		charra_log_error("[" LOG_NAME "] Cannot create CoAP context.");
-		result = CHARRA_RC_COAP_ERROR;
-		goto cleanup;
-	}
-
-	/* CoAP options */
-	charra_log_info("[" LOG_NAME "] Adding CoAP option [attestationResult] to URI_PATH.");
-	if (coap_insert_optlist(
-			&coap_options2, coap_new_optlist(COAP_OPTION_URI_PATH, 6,
-							   (const uint8_t*)"attRes")) != 1) {
-		charra_log_error("[" LOG_NAME "] Cannot add CoAP option [result] to URI_PATH.");
-		result = CHARRA_RC_COAP_ERROR;
-		goto cleanup;
-	}
-
-	charra_log_info("[" LOG_NAME "] Adding CoAP option [attestationResult] to CONTENT_TYPE.");
-	if (coap_insert_optlist(&coap_options2,
-			coap_new_optlist(COAP_OPTION_CONTENT_TYPE,
-				coap_mediatype_cbor_buf_len2, coap_mediatype_cbor_buf2)) != 1) {
-		charra_log_error("[" LOG_NAME "] Cannot add CoAP option [attestationResult] to CONTENT_TYPE.");
-		result = CHARRA_RC_COAP_ERROR;
-		goto cleanup;
-	}
-
-	/* new CoAP request PDU */
-	charra_log_info("[" LOG_NAME "] Creating [attestationResult] PDU. ");
-	if ((pdu2 = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
-		 COAP_REQUEST_FETCH, &coap_options2, data, data_len)) == NULL) {
-			charra_log_error("[" LOG_NAME "] Cannot create [attestationResult] PDU.");
-			result = CHARRA_RC_ERROR;
-			goto cleanup;
-	}
-
-	/* send CoAP PDU */
-	charra_log_info("[" LOG_NAME "] Sending [attestationResult] CoAP message to Relying Party.");
-	if ((mid2 = coap_send_large(coap_session, pdu2)) == COAP_INVALID_MID) {
-		charra_log_error("[" LOG_NAME "] Cannot send result CoAP message.");
-		result = CHARRA_RC_COAP_ERROR;
-		goto cleanup;
-	}
-	
-cleanup:
-	/* free CoAP memory */
-	charra_free_if_not_null_ex(coap_options, coap_delete_optlist);
-	charra_free_if_not_null_ex(coap_session, coap_session_release);
-	charra_free_if_not_null_ex(coap_context, coap_free_context);
-
-	coap_cleanup();
-
-// PASSPORT MODEL SENDING MESSAGE TO RP - END
-
 }
 
 static void coap_attest_handler(struct coap_context_t* ctx CHARRA_UNUSED,
@@ -620,4 +508,191 @@ error:
 	if (tcti_ctx != NULL) {
 		Tss2_TctiLdr_Finalize(&tcti_ctx);
 	}
+}
+
+
+// PASSPORT MODEL SENDING MESSAGE TO RP - BEGIN 
+// Based on some previous charra functions 
+//
+static void coap_attestation_results_handler(struct coap_context_t* ctx,
+	struct coap_resource_t* resource CHARRA_UNUSED, struct coap_session_t* session,
+	struct coap_pdu_t* in, struct coap_binary_t* token CHARRA_UNUSED,
+	struct coap_string_t* query CHARRA_UNUSED, struct coap_pdu_t* out CHARRA_UNUSED) {
+	
+	/* --- receive incoming data --- */
+
+	charra_log_info("[" LOG_NAME "] +-----------------------------------+");
+	charra_log_info("[" LOG_NAME "] |  VERIFIER ATTESTATION RECEIVED    |");
+	charra_log_info("[" LOG_NAME "] +-----------------------------------+");
+
+	// Variables
+	int coap_r = 0;
+	size_t data_len = 0;
+	const uint8_t* data = NULL;
+	size_t data_offset = 0;
+	size_t data_total_len = 0;
+	uint8_t coap_mediatype_cbor_buf2[4] = {0};
+	unsigned int coap_mediatype_cbor_buf_len2 = 0;
+
+
+	coap_pdu_t* pdu = NULL;
+	coap_mid_t mid = COAP_INVALID_MID;
+	coap_optlist_t* coap_options2 = NULL;
+	coap_context_t* coap_context = ctx;
+	coap_session_t* coap_session = session;
+
+	coap_show_pdu(LOG_DEBUG, in);
+
+	if ((coap_r = coap_get_data_large(
+			 in, &data_len, &data, &data_offset, &data_total_len)) == 0) {
+		charra_log_error("[" LOG_NAME "] Could not get CoAP PDU data.");
+		// goto error;
+	} else {
+		charra_log_info(
+			"[" LOG_NAME "] Received data of length %zu.", data_len);
+		charra_log_info("[" LOG_NAME "] Received data of total length %zu.",
+			data_total_len);
+	}
+
+	charra_log_info("[" LOG_NAME "] Calling Relying Party.");
+
+	/* create CoAP context */
+	// charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
+	// if ((ctx = charra_coap_new_context(true)) == NULL) {
+	// 	charra_log_error("[" LOG_NAME "] Cannot create CoAP context.");
+	// 	result = CHARRA_RC_COAP_ERROR;
+	// 	goto cleanup;
+	// }
+
+	charra_log_debug("[" LOG_NAME "] Attester Configuration:");
+	charra_log_debug("[" LOG_NAME "]     Used local port: %d", port_rp);
+	charra_log_debug("[" LOG_NAME "]     DTLS-PSK enabled: %s",
+		(use_dtls_psk == true) ? "true" : "false");
+
+	if (use_dtls_psk) {
+		charra_log_debug("[" LOG_NAME "]         Pre-shared key: '%s'",
+			dtls_psk_key);
+		charra_log_debug(
+			"[" LOG_NAME "]         Hint: '%s'", dtls_psk_hint);
+	}
+	charra_log_debug("[" LOG_NAME "]     DTLS-RPK enabled: %s",
+		(use_dtls_rpk == true) ? "true" : "false");
+	if (use_dtls_rpk) {
+		charra_log_debug("[" LOG_NAME
+						 "]         Private key path: '%s'",
+			dtls_rpk_private_key_path);
+		charra_log_debug("[" LOG_NAME
+						 "]         Public key path: '%s'",
+			dtls_rpk_public_key_path);
+		charra_log_debug("[" LOG_NAME
+						 "]         Peers' public key path: '%s'",
+			dtls_rpk_peer2_public_key_path);
+	}
+
+	if (use_dtls_psk) {
+		charra_log_info(
+			"[" LOG_NAME "] Creating CoAP client session using DTLS with PSK.");
+		if ((coap_session = charra_coap_new_client_session_psk(ctx,
+				 LISTEN_RP, port_rp, COAP_PROTO_DTLS, dtls_psk_identity,
+				 (uint8_t*)dtls_psk_key, strlen(dtls_psk_key))) == NULL) {
+			charra_log_error(
+				"[" LOG_NAME
+				"] Cannot create client session based on DTLS-PSK.");
+			result = CHARRA_RC_ERROR;
+			goto cleanup;
+		}
+	} else if (use_dtls_rpk) {
+		charra_log_info(
+			"[" LOG_NAME "] Creating CoAP client session using DTLS-RPK.");
+
+		coap_dtls_pki_t dtls_pki = {0};
+
+		result = charra_coap_setup_dtls_pki_for_rpk(&dtls_pki,
+			dtls_rpk_private_key_path, dtls_rpk_public_key_path,
+			dtls_rpk_peer2_public_key_path, dtls_rpk_verify_peer_public_key);
+
+		if (result != CHARRA_RC_SUCCESS) {
+			charra_log_error(
+				"[" LOG_NAME "] Error while setting up DTLS-RPK structure.");
+			goto cleanup;
+		}
+
+		if ((coap_session = charra_coap_new_client_session_pki(ctx,
+				 LISTEN_RP, port_rp, COAP_PROTO_DTLS, &dtls_pki)) == NULL) {
+			charra_log_error(
+				"[" LOG_NAME
+				"] Cannot create client session based on DTLS-RPK.");
+			result = CHARRA_RC_COAP_ERROR;
+			goto cleanup;
+		}
+	} else {
+		if ((coap_session = charra_coap_new_client_session(ctx, LISTEN_RP, port_rp, COAP_PROTO_UDP)) == NULL) {
+			charra_log_error(
+				"[" LOG_NAME "] Cannot create client session based on UDP.");
+			result = CHARRA_RC_COAP_ERROR;
+			goto cleanup;
+		}
+	}
+
+	/* create CoAP option for content type */
+	if ((coap_mediatype_cbor_buf_len2 = coap_encode_var_safe(
+			 coap_mediatype_cbor_buf2, sizeof(coap_mediatype_cbor_buf2),
+			 COAP_MEDIATYPE_APPLICATION_CBOR)) == 0) {
+		charra_log_error(
+			"[" LOG_NAME "] Cannot create option for CONTENT_TYPE.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+
+	/* CoAP options */
+	charra_log_info("[" LOG_NAME "] Adding CoAP option [attestationResult] to URI_PATH.");
+	if (coap_insert_optlist(
+			&coap_options2, coap_new_optlist(COAP_OPTION_URI_PATH, 6,
+							   (const uint8_t*)"attRes")) != 1) {
+		charra_log_error("[" LOG_NAME "] Cannot add CoAP option [result] to URI_PATH.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+
+	charra_log_info("[" LOG_NAME "] Adding CoAP option [attestationResult] to CONTENT_TYPE.");
+	if (coap_insert_optlist(&coap_options2,
+			coap_new_optlist(COAP_OPTION_CONTENT_TYPE,
+				coap_mediatype_cbor_buf_len2, coap_mediatype_cbor_buf2)) != 1) {
+		charra_log_error("[" LOG_NAME "] Cannot add CoAP option [attestationResult] to CONTENT_TYPE.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+
+	/* new CoAP request PDU */
+	charra_log_info("[" LOG_NAME "] Creating [attestationResult] PDU. ");
+	if ((pdu = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
+		 COAP_REQUEST_FETCH, &coap_options2, data, data_len)) == NULL) {
+			charra_log_error("[" LOG_NAME "] Cannot create [attestationResult] PDU.");
+			result = CHARRA_RC_ERROR;
+			goto cleanup;
+	}
+
+	/* send CoAP PDU */
+	charra_log_info("[" LOG_NAME "] Sending [attestationResult] CoAP message to Relying Party.");
+	if ((mid = coap_send_large(coap_session, pdu)) == COAP_INVALID_MID) {
+		charra_log_error("[" LOG_NAME "] Cannot send result CoAP message.");
+		result = CHARRA_RC_COAP_ERROR;
+		goto cleanup;
+	}
+
+
+// error: 
+// 	result = EXIT_FAILURE;
+
+cleanup:
+     result = 0;
+	/* free CoAP memory */
+	// charra_free_if_not_null_ex(coap_options, coap_delete_optlist);
+	// charra_free_if_not_null_ex(coap_session, coap_session_release);
+	// charra_free_if_not_null_ex(coap_context, coap_free_context);
+
+	// coap_cleanup();
+
+// PASSPORT MODEL SENDING MESSAGE TO RP - END
+
 }

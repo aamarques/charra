@@ -410,6 +410,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	/* Send attestation result signed back to attester  */
 	if ((result = send_attestation_results(
 			attestation_rc, coap_session, coap_options)) != CHARRA_RC_SUCCESS)
 	 	{   charra_log_info(
@@ -799,9 +800,9 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 
 	char* attestationResult = NULL;
 	if (attestation_rc == 0) { 
-		attestationResult = "valid";
+		attestationResult = "Valid";
 	} else {
-		attestationResult = "invalid";
+		attestationResult = "Invalid";
 	};
     
 	size_t signature_len = 0;

@@ -59,7 +59,8 @@ charra_log_t charra_log_level = CHARRA_LOG_INFO;
 
 /* config */
 static const char LISTEN_ADDRESS[] = "172.18.0.2";
-static unsigned int port = COAP_DEFAULT_PORT; // default port 5683
+// static unsigned int port = COAP_DEFAULT_PORT; // default port 5683
+static unsigned int port = 5683; // default port 5683
 #define CBOR_ENCODER_BUFFER_LENGTH 20480	  // 20 KiB should be sufficient
 bool use_ima_event_log = false;
 char* ima_event_log_path =
@@ -72,8 +73,10 @@ char* dtls_psk_hint = "Charra Attester"; 	// REVER ESTE ITEM
 // for DTLS-RPK
 bool use_dtls_rpk = false;
 char* dtls_rpk_private_key_path = "keys/rparty.der";
-char* dtls_rpk_public_key_path = "keys/attester.pub.der";
-char* dtls_rpk_peer_public_key_path = "keys/verifier.pub.der";
+// char* dtls_rpk_public_key_path = "keys/attester.pub.der";
+char* dtls_rpk_public_key_path = "keys/rparty.pub.der";
+char* verifier_public_key_path = "keys/verifier.pub.der";
+char* dtls_rpk_peer_public_key_path = "keys/attester.pub.der";
 bool dtls_rpk_verify_peer_public_key = true;
 
 /**
@@ -263,10 +266,12 @@ int main(int argc, char** argv) {
 			charra_log_error(
 				"[" LOG_NAME "] Error during CoAP I/O processing.");
 			goto error;
+		// } else {
+		// 	charra_log_debug("[" LOG_NAME "] Olha o gato %d", quit );
 		}
 	}
 
-	charra_log_debug("[" LOG_NAME "] Finished.");
+	charra_log_info("[" LOG_NAME "] Finished.");
 	result = EXIT_SUCCESS;
 	goto finish;
 
@@ -274,12 +279,13 @@ error:
 	result = EXIT_FAILURE;
 
 finish:
+    // result = 0;
 	/* free CoAP memory */
 	charra_free_and_null_ex(coap_endpoint, coap_free_endpoint);
 	charra_free_and_null_ex(coap_context, coap_free_context);
 	coap_cleanup();
 
-	return result;
+	// return result;
 }
 
 /* --- function definitions ----------------------------------------------- */
@@ -296,16 +302,13 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 	charra_log_info("[" LOG_NAME "] +-----------------------------------+");
 
 	charra_log_info(
-		"[" LOG_NAME "] Resource '%s': Received message.", "attestationResult");
+		"[" LOG_NAME "] Resource '%s': Received message.", "attRes");
 	
 	coap_show_pdu(LOG_DEBUG, in);
 
 
 	CHARRA_RC charra_r = CHARRA_RC_SUCCESS;
 	int coap_r = 0;
-	// TSS2_RC tss_r = 0;
-	// ESYS_TR sig_key_handle = ESYS_TR_NONE;
-	// TPM2B_PUBLIC* public_key = NULL;
 
 	/* get data */
 	size_t data_len = 0;
@@ -338,9 +341,9 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 	charra_log_debug("[" LOG_NAME "]     data_len %d", data_len); 
 	charra_log_debug("[" LOG_NAME "]     data = < %s >", att_result.attestation_result_data); 
 	charra_log_debug("[" LOG_NAME "]     signature_len %d", att_result.attestation_signature_len ); 
-	charra_log_info("[" LOG_NAME "] Public key path [ %s ]", dtls_rpk_peer_public_key_path ); 
+	charra_log_info("[" LOG_NAME "] Public key path [ %s ]", verifier_public_key_path ); 
 
- 	if ((charra_verify_att_result(dtls_rpk_peer_public_key_path, att_result.attestation_result_data, 
+ 	if ((charra_verify_att_result(verifier_public_key_path, att_result.attestation_result_data, 
 		att_result.attestation_signature, att_result.attestation_signature_len) !=0)) {
 		charra_log_error("[" LOG_NAME "] error verifing signature attestation result.");
 	} else {
@@ -348,6 +351,7 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 		charra_log_info("[" LOG_NAME "] |      PASSPORT MODEL VALIDATED     |");
 		charra_log_info("[" LOG_NAME "] +-----------------------------------+");
 	}
+
 }
 
 

@@ -483,8 +483,6 @@ CHARRA_RC charra_verify_att_result(char* peer_public_key_path,
 		" signature to verify                                     0x", "\n", false);
 
 
-    charra_log_debug("[" LOG_NAME "] signature_len is %d", sig_size);
-
     if( ( ret = mbedtls_pk_verify( &peer_public_key, MBEDTLS_MD_SHA256, hash, 0,
                            signature, sig_size ) ) != CHARRA_RC_SUCCESS )
     {
@@ -495,7 +493,7 @@ CHARRA_RC charra_verify_att_result(char* peer_public_key_path,
     }
 
 
-    charra_log_info("[" LOG_NAME "] Signature is valid!");
+    charra_log_info("[" LOG_NAME "] Signature Confirmed!");
     exit_code = CHARRA_RC_SUCCESS;
 
 exit:
