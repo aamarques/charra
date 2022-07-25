@@ -58,7 +58,8 @@ coap_log_t coap_log_level = LOG_INFO;
 charra_log_t charra_log_level = CHARRA_LOG_INFO;
 
 /* config */
-static const char LISTEN_ADDRESS[] = "172.18.0.2";
+//static const char LISTEN_ADDRESS[] = "172.18.0.2";
+static const char LISTEN_ADDRESS[] = "192.168.1.4";
 // static unsigned int port = COAP_DEFAULT_PORT; // default port 5683
 static unsigned int port = 5683; // default port 5683
 #define CBOR_ENCODER_BUFFER_LENGTH 20480	  // 20 KiB should be sufficient
@@ -266,9 +267,7 @@ int main(int argc, char** argv) {
 			charra_log_error(
 				"[" LOG_NAME "] Error during CoAP I/O processing.");
 			goto error;
-		// } else {
-		// 	charra_log_debug("[" LOG_NAME "] Olha o gato %d", quit );
-		}
+		} 
 	}
 
 	charra_log_info("[" LOG_NAME "] Finished.");
@@ -285,7 +284,7 @@ finish:
 	charra_free_and_null_ex(coap_context, coap_free_context);
 	coap_cleanup();
 
-	// return result;
+	return result;
 }
 
 /* --- function definitions ----------------------------------------------- */
@@ -352,6 +351,9 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 		charra_log_info("[" LOG_NAME "] +-----------------------------------+");
 	}
 
+	// quit = true;
+
 }
+
 
 

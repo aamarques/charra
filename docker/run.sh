@@ -63,5 +63,6 @@ fi
 ## run (transient) Docker container
 /usr/bin/docker run --rm -it \
 	-v "${PWD}/:/home/bob/charra" \
+  --network=pub_net \
 	"${docker_image_fullname}" \
 	"$@"
