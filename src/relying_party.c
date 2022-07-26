@@ -59,9 +59,8 @@ charra_log_t charra_log_level = CHARRA_LOG_INFO;
 
 /* config */
 //static const char LISTEN_ADDRESS[] = "172.18.0.2";
-static const char LISTEN_ADDRESS[] = "192.168.1.4";
-// static unsigned int port = COAP_DEFAULT_PORT; // default port 5683
-static unsigned int port = 5683; // default port 5683
+char LISTEN_ADDRESS[] = "0.0.0.0";
+static unsigned int port = COAP_DEFAULT_PORT; // default port 5683
 #define CBOR_ENCODER_BUFFER_LENGTH 20480	  // 20 KiB should be sufficient
 bool use_ima_event_log = false;
 char* ima_event_log_path =
@@ -146,6 +145,7 @@ int main(int argc, char** argv) {
 	coap_set_log_level(coap_log_level);
 
 	charra_log_debug("[" LOG_NAME "] Relying Party Configuration:");
+	charra_log_info("[" LOG_NAME "]     Used local IP: %s", LISTEN_ADDRESS);
 	charra_log_debug("[" LOG_NAME "]     Used local port: %d", port);
 	charra_log_debug("[" LOG_NAME "]     DTLS-PSK enabled: %s",
 		(use_dtls_psk == true) ? "true" : "false");

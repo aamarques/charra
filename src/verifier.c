@@ -58,7 +58,6 @@ coap_log_t coap_log_level = LOG_INFO;
 charra_log_t charra_log_level = CHARRA_LOG_INFO;
 
 /* config */
-//.char dst_host[16] = "127.0.0.1";	 // 15 characters for IPv4 plus \0
 char dst_host[16] = "192.168.1.2";	 // 15 characters for IPv4 plus \0
 unsigned int dst_port = 5683;		 // default port
 #define COAP_IO_PROCESS_TIME_MS 2000 // CoAP IO process time in milliseconds

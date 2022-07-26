@@ -40,7 +40,8 @@ static const struct option verifier_options[] = {
 	{"public-key", required_argument, 0, '2'},
 	{"peer-public-key", required_argument, 0, '3'},
 	{"verify-peer", required_argument, 0, '4'},
-	{"ip", required_argument, 0, 'a'}, {"port", required_argument, 0, 'b'},
+	{"ip", required_argument, 0, 'a'}, 
+	{"port", required_argument, 0, 'b'},
 	{"ima", optional_argument, 0, 'm'}, {0}};
 
 static const struct option attester_options[] = {
@@ -52,7 +53,22 @@ static const struct option attester_options[] = {
 	{"public-key", required_argument, 0, '2'},
 	{"peer-public-key", required_argument, 0, '3'},
 	{"verify-peer", required_argument, 0, '4'},
+	{"ip", required_argument, 0, 'a'}, 
+	{"ip-rp", required_argument, 0, 'd'}, 
 	{"port", required_argument, 0, 'b'}, {0}};
+
+static const struct option rparty_options[] = {
+	{"verbose", no_argument, 0, 'v'}, {"log-level", required_argument, 0, 'l'},
+	{"coap-log-level", required_argument, 0, 'c'}, {"psk", no_argument, 0, 'p'},
+	{"key", required_argument, 0, 'k'}, {"hint", required_argument, 0, 'h'},
+	{"rpk", no_argument, 0, 'r'}, {"help", no_argument, 0, '0'},
+	{"private-key", required_argument, 0, '1'},
+	{"public-key", required_argument, 0, '2'},
+	{"peer-public-key", required_argument, 0, '3'},
+	{"verify-peer", required_argument, 0, '4'},
+	{"port", required_argument, 0, 'b'}, {0}};
+
+
 
 int parse_command_line_arguments(int argc, char** argv, cli_config* variables) {
 	cli_parser_caller caller = variables->caller;
@@ -66,13 +82,24 @@ int parse_command_line_arguments(int argc, char** argv, cli_config* variables) {
 		log_name = "relying_party";
 	}
 	
-
 	for (;;) {
 		int index = -1;
-		int identifier = getopt_long(argc, argv,
-			((caller == VERIFIER) ? "vl:c:t:f:s:pk:i:r" : "vl:c:pk:h:r"),
-			((caller == VERIFIER) ? verifier_options : attester_options),
-			&index);
+		int identifier = '0';
+
+		if (caller == VERIFIER) {
+			identifier = getopt_long(argc, argv, "vl:c:t:f:s:pk:i:r", (verifier_options), &index);
+		} else if (caller == ATTESTER) {
+			identifier = getopt_long(argc, argv, "vl:c:pk:h:r", (attester_options), &index);
+		} else {
+			identifier = getopt_long(argc, argv, "vl:c:pk:h:r", (rparty_options), &index);
+		}
+
+		// int identifier = getopt_long(argc, argv, 
+			// ((caller == VERIFIER) ? "vl:c:t:f:s:pk:i:r" : "vl:c:pk:h:r"),
+			// ((caller == VERIFIER) ? verifier_options : attester_options),
+			// &index);
+
+        printf("identifier %d", identifier);
 
 		if (identifier == -1)
 			return 0; // end of command line arguments reached
@@ -94,8 +121,7 @@ int parse_command_line_arguments(int argc, char** argv, cli_config* variables) {
 				"Available are: DEBUG, INFO, NOTICE, WARNING, ERR, CRIT, "
 				"ALERT, EMERG, CIPHERS. Default is INFO.\n");
 			if (caller == VERIFIER) {
-				printf(
-					"     --ip=IP:                    Connect to IP instead of "
+				printf("     --ip=IP:                    Connect to Attester IP instead of "
 					"doing the attestation on localhost.\n");
 				printf(
 					"     --port=PORT:                Connect to PORT instead "
@@ -148,6 +174,9 @@ int parse_command_line_arguments(int argc, char** argv, cli_config* variables) {
 					" -i, --identity=IDENTITY:        Use IDENTITY as identity "
 					"for DTLS. Implicitly enables DTLS-PSK.\n");
 			} else if (caller == ATTESTER) {
+				printf("     --ip=IP:                    Connect to IP instead of "
+					"doing the attestation on localhost.\n");
+				printf("     --ip-rp=IP:                 IP address of Relying Party\n");
 				printf("     --port=PORT:                Open PORT instead of "
 					   "port "
 					   "%d.\n",
@@ -163,6 +192,7 @@ int parse_command_line_arguments(int argc, char** argv, cli_config* variables) {
 				printf(" -h, --hint=HINT:                Use HINT as hint for "
 					   "DTLS. Implicitly enables DTLS-PSK.\n");
 			} else {
+				printf("     --ip=IP:                    local IP address of service.\n");
 				printf("     --port=PORT:                Open PORT instead of "
 					   "port "
 					   "%d.\n",
@@ -353,7 +383,7 @@ int parse_command_line_arguments(int argc, char** argv, cli_config* variables) {
 			continue;
 		}
 
-		if (caller == VERIFIER && identifier == 'a') { // set IP address
+		if (caller == VERIFIER && identifier == 'a') { // set Attester IP address
 			int argument_length = strlen(optarg);
 			if (argument_length > 15) {
 				charra_log_error(
@@ -476,6 +506,45 @@ int parse_command_line_arguments(int argc, char** argv, cli_config* variables) {
 			*(variables->rparty_config.dtls_psk_hint) = hint;
 			continue;
 		}
+
+		else if (caller == ATTESTER && identifier == 'a') { // set Listen IP address
+			int argument_length = strlen(optarg);
+			if (argument_length > 15) {
+				charra_log_error(
+					"[%s] Error while parsing '--ip': Input too long "
+					"for IPv4 address",
+					log_name);
+				return -1;
+			}
+			strncpy(variables->attester_config.listen_addr, optarg, 16);
+			continue;
+		}
+
+		else if (caller == ATTESTER && identifier == 'd') { // set RP IP address
+			int argument_length = strlen(optarg);
+			if (argument_length > 15) {
+				charra_log_error(
+					"[%s] Error while parsing '--ip-rp': Input too long "
+					"for IPv4 address",
+					log_name);
+				return -1;
+			}
+			strncpy(variables->attester_config.dst_host, optarg, 16);
+			continue;
+		}
+
+		// else if (caller == RPARTY && identifier == 'a') { // set Local IP address
+		// 	int argument_length = strlen(optarg);
+		// 	if (argument_length > 15) {
+		// 		charra_log_error(
+		// 			"[%s] Error while parsing '--ip': Input too long "
+		// 			"for IPv4 address",
+		// 			log_name);
+		// 		return -1;
+		// 	}
+		// 	strncpy(variables->rparty_config.dst_host, optarg, 16);
+		// 	continue;
+		// }
 
 		else {
 			// undefined behaviour, probably because getopt_long returned an

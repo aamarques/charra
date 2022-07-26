@@ -51,6 +51,8 @@ typedef struct {
  */
 typedef struct {
 	char** dtls_psk_hint;
+	char* listen_addr;
+	char* dst_host;
 } cli_config_attester;
 
 /**

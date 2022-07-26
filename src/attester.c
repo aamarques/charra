@@ -56,9 +56,8 @@ coap_log_t coap_log_level = LOG_INFO;
 charra_log_t charra_log_level = CHARRA_LOG_INFO;
 
 /* config */
-static const char LISTEN_ADDRESS[] = "0.0.0.0";
-//static const char LISTEN_RP[] = "172.18.0.2";
-static const char LISTEN_RP[] = "192.168.1.4";
+char LISTEN_ADDRESS[16] = "0.0.0.0";
+char LISTEN_RP[16] = "192.168.1.5";
 static unsigned int port = COAP_DEFAULT_PORT; // default port 5683
 static unsigned int port_rp = COAP_DEFAULT_PORT; 
 
@@ -143,6 +142,8 @@ int main(int argc, char** argv) {
 		.attester_config =
 			{
 				.dtls_psk_hint = &dtls_psk_hint,
+				.listen_addr = LISTEN_ADDRESS,
+				.dst_host = LISTEN_RP,
 			},
 	};
 
@@ -157,6 +158,7 @@ int main(int argc, char** argv) {
 	coap_set_log_level(coap_log_level);
 
 	charra_log_debug("[" LOG_NAME "] Attester Configuration:");
+	charra_log_debug("[" LOG_NAME "]     Used local IP: %s", LISTEN_ADDRESS);
 	charra_log_debug("[" LOG_NAME "]     Used local port: %d", port);
 	charra_log_debug("[" LOG_NAME "]     DTLS-PSK enabled: %s",
 		(use_dtls_psk == true) ? "true" : "false");
@@ -567,6 +569,7 @@ static void coap_attestation_results_handler(struct coap_context_t* ctx,
 	// }
 
 	charra_log_debug("[" LOG_NAME "] Attester Configuration:");
+	charra_log_debug("[" LOG_NAME "]     Used local IP: %s", LISTEN_RP);
 	charra_log_debug("[" LOG_NAME "]     Used local port: %d", port_rp);
 	charra_log_debug("[" LOG_NAME "]     DTLS-PSK enabled: %s",
 		(use_dtls_psk == true) ? "true" : "false");
@@ -590,6 +593,8 @@ static void coap_attestation_results_handler(struct coap_context_t* ctx,
 						 "]         Peers' public key path: '%s'",
 			dtls_rpk_peer2_public_key_path);
 	}
+
+	charra_log_info("Relying Part IP: %s", LISTEN_RP);
 
 	if (use_dtls_psk) {
 		charra_log_info(
