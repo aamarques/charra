@@ -17,3 +17,5 @@ obj/*
 # git cred
 commit.sh
 
+libcoap/
+
