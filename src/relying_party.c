@@ -43,6 +43,7 @@
 #include "util/tpm2_util.h"
 #include "util/crypto_util.h"
 
+#include <time.h>
 
 #define CHARRA_UNUSED __attribute__((unused))
 
@@ -144,34 +145,38 @@ int main(int argc, char** argv) {
 	charra_log_set_level(charra_log_level);
 	coap_set_log_level(coap_log_level);
 
-	charra_log_debug("[" LOG_NAME "] Relying Party Configuration:");
-	charra_log_info("[" LOG_NAME "]     Used local IP: %s", LISTEN_ADDRESS);
-	charra_log_debug("[" LOG_NAME "]     Used local port: %d", port);
-	charra_log_debug("[" LOG_NAME "]     DTLS-PSK enabled: %s",
-		(use_dtls_psk == true) ? "true" : "false");
-	if (use_dtls_psk) {
-		charra_log_debug("[" LOG_NAME "]         Pre-shared key: '%s'",
-			dtls_psk_key);
-		charra_log_debug(
-			"[" LOG_NAME "]         Hint: '%s'", dtls_psk_hint);
-	}
-	charra_log_debug("[" LOG_NAME "]     DTLS-RPK enabled: %s",
-		(use_dtls_rpk == true) ? "true" : "false");
-	if (use_dtls_rpk) {
-		charra_log_debug("[" LOG_NAME
-						 "]         Private key path: '%s'",
-			dtls_rpk_private_key_path);
-		charra_log_debug("[" LOG_NAME
-						 "]         Public key path: '%s'",
-			dtls_rpk_public_key_path);
-		charra_log_debug("[" LOG_NAME
-						 "]         Peers' public key path: '%s'",
-			dtls_rpk_peer_public_key_path);
-	}
+	// charra_log_debug("[" LOG_NAME "] Relying Party Configuration:");
+	// charra_log_debug("[" LOG_NAME "]     Used local IP: %s", LISTEN_ADDRESS);
+	// charra_log_debug("[" LOG_NAME "]     Used local port: %d", port);
+	// charra_log_debug("[" LOG_NAME "]     DTLS-PSK enabled: %s",
+	// 	(use_dtls_psk == true) ? "true" : "false");
+	// if (use_dtls_psk) {
+	// 	charra_log_debug("[" LOG_NAME "]         Pre-shared key: '%s'",
+	// 		dtls_psk_key);
+	// 	charra_log_debug(
+	// 		"[" LOG_NAME "]         Hint: '%s'", dtls_psk_hint);
+	// }
+	// charra_log_debug("[" LOG_NAME "]     DTLS-RPK enabled: %s",
+	// 	(use_dtls_rpk == true) ? "true" : "false");
+	// if (use_dtls_rpk) {
+	// 	charra_log_debug("[" LOG_NAME
+	// 					 "]         Private key path: '%s'",
+	// 		dtls_rpk_private_key_path);
+	// 	charra_log_debug("[" LOG_NAME
+	// 					 "]         Public key path: '%s'",
+	// 		dtls_rpk_public_key_path);
+	// 	charra_log_debug("[" LOG_NAME
+	// 					 "]         Peers' public key path: '%s'",
+	// 		dtls_rpk_peer_public_key_path);
+	// }
 
 	/* set varaibles here such that they are valid in case of an 'goto error' */
 	coap_context_t* coap_context = NULL;
 	coap_endpoint_t* coap_endpoint = NULL;
+    
+	clock_t t;
+	double total_func = 0;
+	double time_taken = 0 ;
 
 	if (use_dtls_psk && use_dtls_rpk) {
 		charra_log_error(
@@ -191,7 +196,20 @@ int main(int argc, char** argv) {
 		goto error;
 	}
 
-	charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
+	if (use_dtls_psk) {
+		charra_log_info("[ TIME ] Create new CoAP client session with Relying Party - COAP/DTLS-PSK");
+	} else if (use_dtls_rpk) {
+		charra_log_info("[ TIME ] Create new CoAP client session with Relying Party - COAP/DTLS-RPK");
+	} else {
+		charra_log_info("[ TIME ] Create new CoAP client session with Relying Party- COAP/UDP");
+	}
+
+	charra_log_info("[ TIME ] #0 Initializing CoAP tooks %f secs", total_func/CLOCKS_PER_SEC);
+	t = 0;
+	total_func = 0;
+	t = clock();
+
+	// charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
 	if ((coap_context = charra_coap_new_context(true)) == NULL) {
 		charra_log_error("[" LOG_NAME "] Cannot create CoAP context.");
 		goto error;
@@ -242,8 +260,8 @@ int main(int argc, char** argv) {
 			goto error;
 		}
 	} else {    
-		charra_log_info(
-			"[" LOG_NAME "] Creating CoAP server endpoint using UDP.");
+		// charra_log_info(
+		// 	"[" LOG_NAME "] Creating CoAP server endpoint using UDP.");
 		if ((coap_endpoint = charra_coap_new_endpoint(
 				 coap_context, LISTEN_ADDRESS, port, COAP_PROTO_UDP)) == NULL) {
 			charra_log_error(
@@ -254,9 +272,22 @@ int main(int argc, char** argv) {
 	}
 
 	/* New resource and handler */
-	charra_log_info("[" LOG_NAME "] Registering CoAP [relying_party] resources.");
+	// charra_log_info("[" LOG_NAME "] Registering CoAP [relying_party] resources.");
 	charra_coap_add_resource(
  	 	coap_context, COAP_REQUEST_FETCH, "attRes", coap_attest_result_handler);
+
+
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+
+	if (use_dtls_psk) {
+		charra_log_info("[ TIME ] Create new COAP client session with Relying Party %f - COAP/DTLS-PSK", time_taken);
+	} else if (use_dtls_rpk) {
+		charra_log_info("[ TIME ] Create new COAP client session with Relying Party %f  - COAP/DTLS-RPK", time_taken);
+	} else {
+		charra_log_info("[ TIME ] Create new COAP client session with Relying Party %f  - COAP/UDP", time_taken);
+	}
 
 
 	/* enter main loop */
@@ -300,11 +331,14 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 	charra_log_info("[" LOG_NAME "] |    ATTESTATION RESULT RECEIVED    |");
 	charra_log_info("[" LOG_NAME "] +-----------------------------------+");
 
-	charra_log_info(
-		"[" LOG_NAME "] Resource '%s': Received message.", "attRes");
+	// charra_log_info(
+	// 	"[" LOG_NAME "] Resource '%s': Received message.", "attRes");
 	
 	coap_show_pdu(LOG_DEBUG, in);
 
+	double total_func = 0;
+	double time_taken = 0 ;
+	clock_t t = 0;
 
 	CHARRA_RC charra_r = CHARRA_RC_SUCCESS;
 	int coap_r = 0;
@@ -315,37 +349,70 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 	size_t data_offset = 0;
 	size_t data_total_len = 0;
 
-	if ((coap_r = coap_get_data_large(
-			 in, &data_len, &data, &data_offset, &data_total_len)) == 0) {
+	charra_log_info("[ TIME ] #5 Appraising Attestation Result recieved");
+	t = 0;
+	t = clock();
+	coap_r = coap_get_data_large(
+			 in, &data_len, &data, &data_offset, &data_total_len);
+	if (coap_r  == 0) {
 		charra_log_error("[" LOG_NAME "] Could not get CoAP PDU data.");
-		// goto error;
-	} else {
-		charra_log_info(
-			"[" LOG_NAME "] Received data of length %zu.", data_len);
-		charra_log_info("[" LOG_NAME "] Received data of total length %zu.",
-			data_total_len);
-	}
+		}
 
+	t = clock() - t;
+    time_taken = ((double)t)/CLOCKS_PER_SEC;
+	charra_log_info("[ TIME ]	COAP getting evidence/result data tooks %f secs", time_taken);
+	total_func = total_func + (double)t;
 
 	/* unmarshal data */
-	charra_log_info("[" LOG_NAME "] Parsing received CBOR data.");
+	// charra_log_info("[" LOG_NAME "] Parsing received CBOR data.");
+
 	msg_attestation_appraise_result_dto att_result = {0};
-	if ((charra_r = charra_unmarshal_attestation_passport(
-			 data_len, data, &att_result)) != CHARRA_RC_SUCCESS) {
+
+	t = 0;
+	t = clock();
+	charra_r = charra_unmarshal_attestation_passport(
+			 data_len, data, &att_result);
+
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	charra_log_info("[ TIME ]	Parsing received CBOR data tooks %f secs", time_taken);
+	total_func = total_func + (double)t;
+	// ## end time call
+
+	if (charra_r != CHARRA_RC_SUCCESS) {
 		charra_log_error("[" LOG_NAME "] Could not parse CBOR data.");
-	} else {
-		charra_log_info("[" LOG_NAME "] Attestation Result Unmarshelled");
+	// } else {
+	// 	charra_log_info("[" LOG_NAME "] Attestation Result Unmarshelled");
 	}
 
 	charra_log_debug("[" LOG_NAME "]     data_len %d", data_len); 
 	charra_log_debug("[" LOG_NAME "]     data = < %s >", att_result.attestation_result_data); 
 	charra_log_debug("[" LOG_NAME "]     signature_len %d", att_result.attestation_signature_len ); 
-	charra_log_info("[" LOG_NAME "] Public key path [ %s ]", verifier_public_key_path ); 
+	charra_log_debug("[" LOG_NAME "] Public key path [ %s ]", verifier_public_key_path ); 
 
- 	if ((charra_verify_att_result(verifier_public_key_path, att_result.attestation_result_data, 
-		att_result.attestation_signature, att_result.attestation_signature_len) !=0)) {
+
+	// ### call time
+	// charra_log_info("[ TIME ] 	Calling charra_verify_att_result()");
+	t = 0;
+	t = clock();
+
+ 	charra_r = charra_verify_att_result(verifier_public_key_path, att_result.attestation_result_data, 
+		att_result.attestation_signature, att_result.attestation_signature_len);
+
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	charra_log_info("[ TIME ]	Verify signature tooks %f secs", time_taken);
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ] #5 Appraising Attestation Result recieved tooks %f secs", total_func/CLOCKS_PER_SEC);
+
+	// ## End of time call
+
+
+ 	if (charra_r !=0) {
 		charra_log_error("[" LOG_NAME "] error verifing signature attestation result.");
 	} else {
+		charra_log_info("[" LOG_NAME "] Attestation Result : %s", att_result.attestation_result_data);
+		charra_log_info("[" LOG_NAME "] Signature Confirmed!");
 		charra_log_info("[" LOG_NAME "] +-----------------------------------+");
 		charra_log_info("[" LOG_NAME "] |      PASSPORT MODEL VALIDATED     |");
 		charra_log_info("[" LOG_NAME "] +-----------------------------------+");

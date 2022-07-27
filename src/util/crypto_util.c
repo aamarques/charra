@@ -372,8 +372,8 @@ CHARRA_RC charra_sign_att_result(char* peer_private_key_path,
     const char *pers = "mbedtls_pk_sign";
     size_t att_result_len = sizeof(attestationResult);
     
-	charra_log_info("[" LOG_NAME "] Received attestationResult is: [ %s ]", attestationResult);
-    charra_log_info("[" LOG_NAME "] Seeding the random number generator...");
+	// charra_log_info("[" LOG_NAME "] Received attestationResult is: [ %s ]", attestationResult);
+    // charra_log_info("[" LOG_NAME "] Seeding the random number generator...");
 
     if( ( ret = mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, &entropy,
                                (const unsigned char *) pers,
@@ -383,7 +383,7 @@ CHARRA_RC charra_sign_att_result(char* peer_private_key_path,
         goto exit;
     }
 
-    charra_log_info("[" LOG_NAME "] Reading private key from '%s'", peer_private_key_path );
+    // charra_log_info("[" LOG_NAME "] Reading private key from '%s'", peer_private_key_path );
 
 	if( ( ret = mbedtls_pk_parse_keyfile( &peer_private_key, peer_private_key_path, "" ) ) != 0 )
     {
@@ -395,7 +395,7 @@ CHARRA_RC charra_sign_att_result(char* peer_private_key_path,
      * Compute the SHA-256 hash of the input file,
      * then calculate the signature of the hash.
      */
-    charra_log_info("[" LOG_NAME "] Generating the SHA-256 signature");
+    // charra_log_info("[" LOG_NAME "] Generating the SHA-256 signature");
 
 	/* hash data */
 	if ((ret = charra_crypto_hash(
@@ -419,12 +419,12 @@ CHARRA_RC charra_sign_att_result(char* peer_private_key_path,
     charra_log_debug("[" LOG_NAME "] Generated signature lenght: %d - %d", sig_buffer_len, sizeof(sig_buffer));
 
     charra_log_debug("[" LOG_NAME "] Generated HASH of lenght: %d", sizeof(hash));
-	charra_print_hex(CHARRA_LOG_INFO, sizeof(hash), hash,
-		"  hash generated                                         0x", "\n", false);
+	// charra_print_hex(CHARRA_LOG_INFO, sizeof(hash), hash,
+	// 	"  hash generated                                         0x", "\n", false);
 
     charra_log_debug("[" LOG_NAME "] Generated signature total of lenght = %d", sizeof(sig_buffer));
-	charra_print_hex(CHARRA_LOG_INFO,  sig_buffer_len, signature,
-		"  signature generated                                    0x", "\n", false);
+	// charra_print_hex(CHARRA_LOG_INFO,  sig_buffer_len, signature,
+	// 	"  signature generated                                    0x", "\n", false);
 
     exit_code = CHARRA_RC_SUCCESS;
 
@@ -455,9 +455,9 @@ CHARRA_RC charra_verify_att_result(char* peer_public_key_path,
     mbedtls_pk_context peer_public_key;  
     mbedtls_pk_init (&peer_public_key);
 
-	charra_log_info("[" LOG_NAME "] Recieved attestationResult:  [ %s ]", attestationResult);
-	charra_log_info("[" LOG_NAME "] Recieved attestationResult:  [ %d ]", sig_size);
- 	charra_log_info("[" LOG_NAME "] Reading public key from '%s'", peer_public_key_path );
+	charra_log_debug("[" LOG_NAME "] Recieved attestationResult:  [ %s ]", attestationResult);
+	charra_log_debug("[" LOG_NAME "] Recieved attestationResult:  [ %d ]", sig_size);
+ 	charra_log_debug("[" LOG_NAME "] Reading public key from '%s'", peer_public_key_path );
 
     if( ( ret = mbedtls_pk_parse_public_keyfile( &peer_public_key, peer_public_key_path) ) != 0 )
     {
@@ -475,14 +475,6 @@ CHARRA_RC charra_verify_att_result(char* peer_public_key_path,
 	charra_log_debug("[" LOG_NAME "] Generated HASH of lenght %d:", sizeof(hash));
 	charra_log_debug("[" LOG_NAME "] Generated sig_size of lenght %ld:", sig_size);
 
-	charra_print_hex(CHARRA_LOG_INFO, sizeof(hash), hash,
-		" hash regenerated                                        0x", "\n", false);
-
-
-	charra_print_hex(CHARRA_LOG_INFO, sig_size, signature,
-		" signature to verify                                     0x", "\n", false);
-
-
     if( ( ret = mbedtls_pk_verify( &peer_public_key, MBEDTLS_MD_SHA256, hash, 0,
                            signature, sig_size ) ) != CHARRA_RC_SUCCESS )
     {
@@ -492,8 +484,7 @@ CHARRA_RC charra_verify_att_result(char* peer_public_key_path,
         goto exit;
     }
 
-
-    charra_log_info("[" LOG_NAME "] Signature Confirmed!");
+    charra_log_debug("[" LOG_NAME "] Signature Confirmed!");
     exit_code = CHARRA_RC_SUCCESS;
 
 exit:

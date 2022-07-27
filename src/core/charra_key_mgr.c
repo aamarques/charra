@@ -33,7 +33,7 @@ CHARRA_RC charra_load_tpm2_key(ESYS_CONTEXT* ctx, const uint32_t key_len,
 	const uint8_t* key, ESYS_TR* key_handle, TPM2B_PUBLIC** out_public) {
 	TSS2_RC r = TSS2_RC_SUCCESS;
 	if (memcmp(key, "PK.RSA.default", key_len) == 0) {
-		charra_log_info("Loading key \"PK.RSA.default\".");
+		// charra_log_info("Loading key \"PK.RSA.default\".");
 		r = tpm2_create_primary_key_rsa2048(ctx, key_handle, out_public);
 		if (r != TSS2_RC_SUCCESS) {
 			charra_log_error("Loading of key \"PK.RSA.default\" failed.");

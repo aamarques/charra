@@ -113,8 +113,8 @@ TSS2_RC tpm2_create_primary_key_rsa2048(
 			 NULL)) != TSS2_RC_SUCCESS) {
 		error_msg = "Esys_CreatePrimary";
 		goto error;
-	} else {
-		charra_log_info("Primary Key created successfully.");
+	// } else {
+	// 	charra_log_info("Primary Key created successfully.");
 	}
 
 	return TSS2_RC_SUCCESS;

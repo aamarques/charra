@@ -79,7 +79,7 @@ static CHARRA_RC handle_end_of_pcr_set(uint8_t** reference_pcrs,
 						 "%d of the PCR sets",
 			pcr_set_index);
 	} else if (rc == CHARRA_RC_SUCCESS) {
-		charra_log_info(
+		charra_log_debug(
 			"Found matching PCR composite digest at index %d of the PCR sets.",
 			pcr_set_index);
 	}

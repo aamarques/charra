@@ -67,7 +67,7 @@ static const bool USE_TPM_FOR_RANDOM_NONCE_GENERATION = false;
 
 #define TPM_SIG_KEY_ID_LEN 14
 #define TPM_SIG_KEY_ID "PK.RSA.default"
-// TODO: Make PCR selection configurable via CLI
+// TODO: Make PCR selection configurable via CLIcharra_log_info("[ TIME TOTAL ] tooks %f secs", total_func/CLOCKS_PER_SEC);
 static uint8_t tpm_pcr_selection[TPM2_MAX_PCRS] = {0, 1, 2, 3, 4, 5, 6, 7, 10};
 static uint32_t tpm_pcr_selection_len = 9;
 uint16_t attestation_response_timeout =
@@ -191,33 +191,33 @@ int main(int argc, char** argv) {
 			charra_log_log_raw(CHARRA_LOG_DEBUG, "%d\n", tpm_pcr_selection[i]);
 		}
 	}
-	charra_log_debug("[" LOG_NAME "]     IMA event log attestation enabled: %s",
-		(use_ima_event_log == true) ? "true" : "false");
-	if (use_ima_event_log) {
-		charra_log_debug(
-			"[" LOG_NAME "]         IMA event log path: '%s'", ima_event_log_path);
-	}
-	charra_log_debug("[" LOG_NAME "]     DTLS with PSK enabled: %s",
-		(use_dtls_psk == true) ? "true" : "false");
-	if (use_dtls_psk) {
-		charra_log_debug("[" LOG_NAME "]         Pre-shared key: '%s'",
-			dtls_psk_key);
-		charra_log_debug("[" LOG_NAME "]         Identity: '%s'",
-			dtls_psk_identity);
-	}
-	charra_log_debug("[" LOG_NAME "]     DTLS-RPK enabled: %s",
-		(use_dtls_rpk == true) ? "true" : "false");
-	if (use_dtls_rpk) {
-		charra_log_debug("[" LOG_NAME
-						 "]         Private key path: '%s'",
-			dtls_rpk_private_key_path);
-		charra_log_debug("[" LOG_NAME
-						 "]         Public key path: '%s'",
-			dtls_rpk_public_key_path);
-		charra_log_debug("[" LOG_NAME
-						 "]         Peers' public key path: '%s'",
-			dtls_rpk_peer_public_key_path);
-	}
+	// charra_log_debug("[" LOG_NAME "]     IMA event log attestation enabled: %s",
+	// 	(use_ima_event_log == true) ? "true" : "false");
+	// if (use_ima_event_log) {
+	// 	charra_log_debug(
+	// 		"[" LOG_NAME "]         IMA event log path: '%s'", ima_event_log_path);
+	// }
+	// charra_log_debug("[" LOG_NAME "]     DTLS with PSK enabled: %s",
+	// 	(use_dtls_psk == true) ? "true" : "false");
+	// if (use_dtls_psk) {
+	// 	charra_log_debug("[" LOG_NAME "]         Pre-shared key: '%s'",
+	// 		dtls_psk_key);
+	// 	charra_log_debug("[" LOG_NAME "]         Identity: '%s'",
+	// 		dtls_psk_identity);
+	// }
+	// charra_log_debug("[" LOG_NAME "]     DTLS-RPK enabled: %s",
+	// 	(use_dtls_rpk == true) ? "true" : "false");
+	// if (use_dtls_rpk) {
+	// 	charra_log_debug("[" LOG_NAME
+	// 					 "]         Private key path: '%s'",
+	// 		dtls_rpk_private_key_path);
+	// 	charra_log_debug("[" LOG_NAME
+	// 					 "]         Public key path: '%s'",
+	// 		dtls_rpk_public_key_path);
+	// 	charra_log_debug("[" LOG_NAME
+	// 					 "]         Peers' public key path: '%s'",
+	// 		dtls_rpk_peer_public_key_path);
+	// }
 
 	/* set varaibles here such that they are valid in case of an 'goto cleanup'
 	 */
@@ -245,8 +245,13 @@ int main(int argc, char** argv) {
 	}
 
 	/* create CoAP context */
+	
+	charra_log_info("[ TIME ] #0 Initializing CoAP.");
+	double total_func = 0;
+	double time_taken = 0 ;
+	clock_t t = 0;
+	t = clock();
 
-	charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
 	if ((coap_context = charra_coap_new_context(true)) == NULL) {
 		charra_log_error("[" LOG_NAME "] Cannot create CoAP context.");
 		result = CHARRA_RC_COAP_ERROR;
@@ -254,13 +259,13 @@ int main(int argc, char** argv) {
 	}
 
 	/* register CoAP response handler */
-	charra_log_info("[" LOG_NAME "] Registering CoAP response handler.");
+	// charra_log_info("[" LOG_NAME "] Registering CoAP response handler.");
 	coap_register_response_handler(coap_context, coap_attest_handler);
 	
 
 	if (use_dtls_psk) {
-		charra_log_info(
-			"[" LOG_NAME "] Creating CoAP client session using DTLS with PSK.");
+		// charra_log_info(
+		// 	"[" LOG_NAME "] Creating CoAP client session using DTLS with PSK.");
 		if ((coap_session = charra_coap_new_client_session_psk(coap_context,
 				 dst_host, dst_port, COAP_PROTO_DTLS, dtls_psk_identity,
 				 (uint8_t*)dtls_psk_key, strlen(dtls_psk_key))) == NULL) {
@@ -271,8 +276,8 @@ int main(int argc, char** argv) {
 			goto cleanup;
 		}
 	} else if (use_dtls_rpk) {
-		charra_log_info(
-			"[" LOG_NAME "] Creating CoAP client session using DTLS-RPK.");
+		// charra_log_info(
+		// 	"[" LOG_NAME "] Creating CoAP client session using DTLS-RPK.");
 		coap_dtls_pki_t dtls_pki = {0};
 
 		result = charra_coap_setup_dtls_pki_for_rpk(&dtls_pki,
@@ -293,8 +298,8 @@ int main(int argc, char** argv) {
 			goto cleanup;
 		}
 	} else {   
-		charra_log_info(
-			"[" LOG_NAME "] Creating CoAP client session using UDP.");
+		// charra_log_info(
+		// 	"[" LOG_NAME "] Creating CoAP client session using UDP.");
 		if ((coap_session = charra_coap_new_client_session(
 				 coap_context, dst_host, dst_port, COAP_PROTO_UDP)) == NULL) {
 			charra_log_error(
@@ -303,6 +308,19 @@ int main(int argc, char** argv) {
 			goto cleanup;
 		}
 	}
+
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+
+	if (use_dtls_psk) {
+		charra_log_info("[ TIME ]	Create new COAP client session with Relying Party %f - COAP/DTLS-PSK", time_taken);
+	} else if (use_dtls_rpk) {
+		charra_log_info("[ TIME ]	Create new COAP client session with Relying Party %f  - COAP/DTLS-RPK", time_taken);
+	} else {
+		charra_log_info("[ TIME ]	Create new COAP client session with Relying Party %f  - COAP/UDP", time_taken);
+	}
+
 
 	/* define needed variables */
 	msg_attestation_request_dto req = {0};
@@ -314,6 +332,9 @@ int main(int argc, char** argv) {
 	/* create CoAP option for content type */
 	uint8_t coap_mediatype_cbor_buf[4] = {0};
 	unsigned int coap_mediatype_cbor_buf_len = 0;
+	t = 0;
+	t = clock();
+
 	if ((coap_mediatype_cbor_buf_len = coap_encode_var_safe(
 			 coap_mediatype_cbor_buf, sizeof(coap_mediatype_cbor_buf),
 			 COAP_MEDIATYPE_APPLICATION_CBOR)) == 0) {
@@ -323,9 +344,21 @@ int main(int argc, char** argv) {
 		goto cleanup;
 	}
 
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ] 	create CoAP option for content type tooks %f secs", time_taken);
+	charra_log_info("[ TIME ] #0 Initializing CoAP tooks %f secs", total_func/CLOCKS_PER_SEC);
+
 
 	/* create attestation request */
-	charra_log_info("[" LOG_NAME "] Creating attestation request.");
+	// charra_log_info("[" LOG_NAME "] Creating attestation request.");
+
+	charra_log_info("[ TIME ] #1 Creating Attestetion Request Claim and send it to Attester");
+	t = 0;
+	total_func =0;
+	t = clock();
+	
 	if ((result = create_attestation_request(&req)) != CHARRA_RC_SUCCESS) {
 		charra_log_error("[" LOG_NAME "] Cannot create attestation request.");
 		goto cleanup;
@@ -334,18 +367,32 @@ int main(int argc, char** argv) {
 		last_request = req;
 	}
 
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ] 	Creating Attestetion Request tooks %f secs", time_taken);
+
 	/* marshal attestation request */
-	charra_log_info(
-		"[" LOG_NAME "] Marshaling attestation request data to CBOR.");
+	t = 0;
+	t = clock();
+	// charra_log_info(
+	// 	"[" LOG_NAME "] Marshaling attestation request data to CBOR.");
 	if ((result = charra_marshal_attestation_request(
 			 &req, &req_buf_len, &req_buf)) != CHARRA_RC_SUCCESS) {
 		charra_log_error(
 			"[" LOG_NAME "] Marshaling attestation request data failed.");
 		goto cleanup;
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]	Encoding request to CBOR tooks %f secs", time_taken);
 
 	/* CoAP options */
-	charra_log_info("[" LOG_NAME "] Adding CoAP option URI_PATH.");
+	// charra_log_info("[" LOG_NAME "] Adding CoAP option URI_PATH.");
+	t = 0;
+	t = clock();
+
 	if (coap_insert_optlist(
 			&coap_options, coap_new_optlist(COAP_OPTION_URI_PATH, 6,
 							   (const uint8_t*)"attest")) != 1) {
@@ -353,7 +400,15 @@ int main(int argc, char** argv) {
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
-	charra_log_info("[" LOG_NAME "] Adding CoAP option CONTENT_TYPE.");
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]	Adding CoAP option URI_PATH tooks %f secs", time_taken);
+
+
+	// charra_log_info("[" LOG_NAME "] Adding CoAP option CONTENT_TYPE.");
+	t = 0;
+	t = clock();
 	if (coap_insert_optlist(&coap_options,
 			coap_new_optlist(COAP_OPTION_CONTENT_TYPE,
 				coap_mediatype_cbor_buf_len, coap_mediatype_cbor_buf)) != 1) {
@@ -361,9 +416,15 @@ int main(int argc, char** argv) {
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]	Adding CoAP option CONTENT_TYPE tooks %f secs", time_taken);
 
 	/* new CoAP request PDU */
-	charra_log_info("[" LOG_NAME "] Creating request PDU.");
+	// charra_log_info("[" LOG_NAME "] Creating request PDU.");
+	t = 0;
+	t = clock();
 	if ((pdu = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
 			 COAP_REQUEST_FETCH, &coap_options, req_buf, req_buf_len)) ==
 		NULL) {
@@ -371,21 +432,33 @@ int main(int argc, char** argv) {
 		result = CHARRA_RC_ERROR;
 		goto cleanup;
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]	Creating request PDU tooks %f secs", time_taken);
 
 	/* set timeout length */
 	coap_fixed_point_t coap_timeout = {attestation_response_timeout, 0};
 	coap_session_set_ack_timeout(coap_session, coap_timeout);
 
 	/* send CoAP PDU */
-	charra_log_info("[" LOG_NAME "] Sending CoAP message.");
+	// charra_log_info("[" LOG_NAME "] Sending CoAP message.");
+	t = 0;
+	t = clock();
 	if ((mid = coap_send_large(coap_session, pdu)) == COAP_INVALID_MID) {
 		charra_log_error("[" LOG_NAME "] Cannot send CoAP message.");
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]	Sending Attestation Request to Attester tooks %f secs", time_taken);
+	charra_log_info("[ TIME ] #1 Creating Attestetion Request Claim and send it to Attester tooks %f secs", total_func/CLOCKS_PER_SEC);
+
 
 	/* processing and waiting for response */
-	charra_log_info("[" LOG_NAME "] Processing and waiting for response ...");
+	// charra_log_info("[" LOG_NAME "] Processing and waiting for response ...");
 	uint16_t response_wait_time = 0;
 	while (!processing_response && !coap_can_exit(coap_context)) {
 		/* process CoAP I/O */
@@ -470,9 +543,9 @@ static CHARRA_RC create_attestation_request(
 			return err;
 		}
 	}
-	charra_log_info("[" LOG_NAME "] Generated nonce of length %d:", nonce_len);
-	charra_print_hex(CHARRA_LOG_INFO, nonce_len, nonce,
-		"                                                  0x", "\n", false);
+	// charra_log_info("[" LOG_NAME "] Generated nonce of length %d:", nonce_len);
+	// charra_print_hex(CHARRA_LOG_INFO, nonce_len, nonce,
+	// 	"                                                  0x", "\n", false);
 
 	/* build attestation request */
 	msg_attestation_request_dto req = {
@@ -518,40 +591,61 @@ static coap_response_t coap_attest_handler(
 
 	processing_response = true;
 
-	charra_log_info(
-		"[" LOG_NAME "] Resource '%s': Received message.", "attest");
+	// charra_log_info(
+	// 	"[" LOG_NAME "] Resource '%s': Received message.", "attest");
 	coap_show_pdu(LOG_DEBUG, in);
 
 	/* --- receive incoming data --- */
+	double total_func = 0;
+	double time_taken = 0 ;
+	clock_t t = 0;
+	double validate_claims = 0;
+	charra_log_info("[ TIME ] #4 appraiseEvidences");
 
 	/* get data */
 	size_t data_len = 0;
 	const uint8_t* data = NULL;
 	size_t data_offset = 0;
 	size_t data_total_len = 0;
+	
+	t = clock();
 	if ((coap_r = coap_get_data_large(
 			 in, &data_len, &data, &data_offset, &data_total_len)) == 0) {
 		charra_log_error("[" LOG_NAME "] Could not get CoAP PDU data.");
 		attestation_rc = CHARRA_RC_ERROR;
 		goto cleanup;
-	} else {
-		charra_log_info(
-			"[" LOG_NAME "] Received data of length %zu.", data_len);
-		charra_log_info("[" LOG_NAME "] Received data of total length %zu.",
-			data_total_len);
+	// } else {
+	// 	charra_log_info(
+	// 		"[" LOG_NAME "] Received data of length %zu.", data_len);
+	// 	charra_log_info("[" LOG_NAME "] Received data of total length %zu.",
+	// 		data_total_len);
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]  	COAP getting income data tooks %f secs", time_taken);
+
 
 	/* unmarshal data */
-	charra_log_info("[" LOG_NAME "] Parsing received CBOR data.");
+	t = 0;
+	t = clock();
+	// charra_log_info("[" LOG_NAME "] Parsing received CBOR data.");
 	msg_attestation_response_dto res = {0};
 	if ((attestation_rc = charra_unmarshal_attestation_response(
 			 data_len, data, &res)) != CHARRA_RC_SUCCESS) {
 		charra_log_error("[" LOG_NAME "] Could not parse CBOR data.");
 		goto cleanup;
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]  	COAP getting income data tooks %f secs", time_taken);
 
 	/* store last response */
 	last_response = res;
+
+	t = 0;
+	t = clock();
 
 	/* verify data */
 	if (res.attestation_data_len > sizeof(TPM2B_ATTEST)) {
@@ -569,7 +663,7 @@ static coap_response_t coap_attest_handler(
 	}
 
 	/* --- verify TPM Quote --- */
-	charra_log_info("[" LOG_NAME "] Starting verification.");
+	// charra_log_info("[" LOG_NAME "] Starting verification.");
 
 	/* initialize ESAPI */
 	ESYS_CONTEXT* esys_ctx = NULL;
@@ -586,20 +680,34 @@ static coap_response_t coap_attest_handler(
 		attestation_rc = CHARRA_RC_ERROR;
 		goto cleanup;
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	validate_claims = validate_claims + (double)t;
+	charra_log_info("[ TIME ] 	ESAPI initialize tooks %f secs", time_taken);	
+
 
 	/* load TPM key */
+	t = 0;
+	t = clock();
 	TPM2B_PUBLIC* tpm2_public_key = (TPM2B_PUBLIC*)res.tpm2_public_key;
-	charra_log_info("[" LOG_NAME "] Loading TPM key.");
+	// charra_log_info("[" LOG_NAME "] Loading TPM key.");
 	if ((attestation_rc = charra_load_external_public_key(esys_ctx,
 			 tpm2_public_key, &sig_key_handle)) != CHARRA_RC_SUCCESS) {
 		charra_log_error("[" LOG_NAME "] Loading external public key failed.");
 		goto cleanup;
-	} else {
-		charra_log_info("[" LOG_NAME "] External public key loaded.");
+	// } else {
+	// 	charra_log_info("[" LOG_NAME "] External public key loaded.");
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	validate_claims = validate_claims + (double)t;
+	charra_log_info("[ TIME ] 	Loading external public key tooks %f secs", time_taken);	
+
 
 	/* prepare verification */
-	charra_log_info("[" LOG_NAME "] Preparing TPM Quote verification.");
+	// charra_log_info("[" LOG_NAME "] Preparing TPM Quote verification.");
 	TPM2B_ATTEST attest = {0};
 	attest.size = res.attestation_data_len;
 	memcpy(
@@ -608,51 +716,75 @@ static coap_response_t coap_attest_handler(
 	memcpy(&signature, res.tpm2_signature, res.tpm2_signature_len);
 
 	/* --- verify attestation signature --- */
+
 	bool attestation_result_signature = false;
 	{
-		charra_log_info(
-			"[" LOG_NAME "] Verifying TPM Quote signature with TPM ...");
+		// charra_log_info(
+		// 	"[" LOG_NAME "] Verifying TPM Quote signature with TPM ...");
 		/* verify attestation signature with TPM */
+		t = 0;
+		t = clock();
 		if ((attestation_rc = charra_verify_tpm2_quote_signature_with_tpm(
 				 esys_ctx, sig_key_handle, TPM2_ALG_SHA256, &attest, &signature,
 				 &validation)) == CHARRA_RC_SUCCESS) {
-			charra_log_info(
-				"[" LOG_NAME "]     => TPM Quote signature is valid!");
+			// charra_log_info(
+			// 	"[" LOG_NAME "]     => TPM Quote signature is valid!");
 			attestation_result_signature = true;
 		} else {
 			charra_log_error(
 				"[" LOG_NAME "]     => TPM Quote signature is NOT valid!");
 		}
+		t = clock() - t;
+		time_taken = ((double)t)/CLOCKS_PER_SEC;
+		total_func = total_func + (double)t;
+		validate_claims = validate_claims + (double)t;
+		charra_log_info("[ TIME ] 	Verifying TPM Quote signature with TPM tooks %f secs", time_taken);
 	}
 	{
 		/* convert TPM public key to mbedTLS public key */
-		charra_log_info(
-			"[" LOG_NAME
-			"] Converting TPM public key to mbedTLS public key ...");
+		// charra_log_info(
+		// 	"[" LOG_NAME
+		// 	"] Converting TPM public key to mbedTLS public key ...");
+		t = 0;
+		t = clock();
 		mbedtls_rsa_context mbedtls_rsa_pub_key = {0};
 		if ((attestation_rc = charra_crypto_tpm_pub_key_to_mbedtls_pub_key(
 				 tpm2_public_key, &mbedtls_rsa_pub_key)) != CHARRA_RC_SUCCESS) {
 			charra_log_error("[" LOG_NAME "] mbedTLS RSA error");
 			goto cleanup;
 		}
+		t = clock() - t;
+		time_taken = ((double)t)/CLOCKS_PER_SEC;
+		total_func = total_func + (double)t;
+		validate_claims = validate_claims + (double)t;
+		charra_log_info("[ TIME ] 	Converting TPM pub_key to mbedTLS tooks %f secs", time_taken);
 
 		/* verify attestation signature with mbedTLS */
-		charra_log_info(
-			"[" LOG_NAME "] Verifying TPM Quote signature with mbedTLS ...");
+		// charra_log_info(
+		// 	"[" LOG_NAME "] Verifying TPM Quote signature with mbedTLS ...");
+		t = 0;
+		t = clock();
 		if ((attestation_rc = charra_crypto_rsa_verify_signature(
 				 &mbedtls_rsa_pub_key, MBEDTLS_MD_SHA256, res.attestation_data,
 				 (size_t)res.attestation_data_len,
 				 signature.signature.rsapss.sig.buffer)) == CHARRA_RC_SUCCESS) {
-			charra_log_info(
-				"[" LOG_NAME "]     => TPM Quote signature is valid!");
+			// charra_log_info(
+			// 	"[" LOG_NAME "]     => TPM Quote signature is valid!");
 		} else {
 			charra_log_error(
 				"[" LOG_NAME "]     => TPM Quote signature is NOT valid!");
 		}
 		mbedtls_rsa_free(&mbedtls_rsa_pub_key);
+		t = clock() - t;
+		time_taken = ((double)t)/CLOCKS_PER_SEC;
+		total_func = total_func + (double)t;
+		validate_claims = validate_claims + (double)t;
+		charra_log_info("[ TIME ] 	Verifying TPM Quote signature with mbedTLS tooks %f secs", time_taken);
 	}
 
 	/* unmarshal attestation data */
+	t = 0;
+	t = clock();
 	TPMS_ATTEST attest_struct = {0};
 	attestation_rc = charra_unmarshal_tpm2_quote(
 		res.attestation_data_len, res.attestation_data, &attest_struct);
@@ -660,16 +792,22 @@ static coap_response_t coap_attest_handler(
 		charra_log_error("[" LOG_NAME "] Error while unmarshaling TPM2 Quote.");
 		goto cleanup;
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	validate_claims = validate_claims + (double)t;
+	charra_log_info("[ TIME ] 	Unmarshal attestation data tooks %f secs", time_taken);
 
 	/* --- verify nonce --- */
 	bool attestation_result_nonce = false;
 	{
-		charra_log_info("[" LOG_NAME "] Verifying nonce ...");
-
+		// charra_log_info("[" LOG_NAME "] Verifying nonce ...");
+		t = 0;
+		t = clock();
 		attestation_result_nonce = charra_verify_tpm2_quote_qualifying_data(
 			last_request.nonce_len, last_request.nonce, &attest_struct);
 		if (attestation_result_nonce == true) {
-			charra_log_info(
+			charra_log_debug(
 				"[" LOG_NAME
 				"]     => Nonce in TPM Quote is valid! (matches the one sent)");
 		} else {
@@ -677,25 +815,31 @@ static coap_response_t coap_attest_handler(
 				"[" LOG_NAME "]     => Nonce in TPM Quote is NOT valid! (does "
 				"not match the one sent)");
 		}
+		t = clock() - t;
+		time_taken = ((double)t)/CLOCKS_PER_SEC;
+		total_func = total_func + (double)t;
+		validate_claims = validate_claims + (double)t;
+		charra_log_info("[ TIME ] 	Verifying Nonce tooks %f secs", time_taken);		
 	}
 
 	/* --- verify PCRs --- */
 	bool attestation_result_pcrs = false;
 	{
-		charra_log_info("[" LOG_NAME "] Verifying PCRs ...");
+		// charra_log_info("[" LOG_NAME "] Verifying PCRs ...");
 
-		charra_log_info(
-			"[" LOG_NAME "] Actual PCR composite digest from TPM Quote is:");
-		charra_print_hex(CHARRA_LOG_INFO,
-			attest_struct.attested.quote.pcrDigest.size,
-			attest_struct.attested.quote.pcrDigest.buffer,
-			"                                              0x", "\n", false);
-
+		// charra_log_info(
+		// 	"[" LOG_NAME "] Actual PCR composite digest from TPM Quote is:");
+		// charra_print_hex(CHARRA_LOG_INFO,
+		// 	attest_struct.attested.quote.pcrDigest.size,
+		// 	attest_struct.attested.quote.pcrDigest.buffer,
+		// 	"                                              0x", "\n", false);
+		t = 0;
+		t = clock();
 		CHARRA_RC pcr_check =
 			charra_check_pcr_digest_against_reference(reference_pcr_file_path,
 				tpm_pcr_selection, tpm_pcr_selection_len, &attest_struct);
 		if (pcr_check == CHARRA_RC_SUCCESS) {
-			charra_log_info(
+			charra_log_debug(
 				"[" LOG_NAME "]     => PCR composite digest is valid!");
 			attestation_result_pcrs = true;
 		} else {
@@ -704,6 +848,11 @@ static coap_response_t coap_attest_handler(
 				"]     => PCR composite digest is NOT valid! (does "
 				"not match any of the digests from the set of reference PCRs)");
 		}
+		t = clock() - t;
+		time_taken = ((double)t)/CLOCKS_PER_SEC;
+		total_func = total_func + (double)t;
+		validate_claims = validate_claims + (double)t;
+		charra_log_info("[ TIME ] 	Verifying PCRs tooks %f secs", time_taken);	
 	}
 
 	/* verify event log */
@@ -739,6 +888,9 @@ static coap_response_t coap_attest_handler(
 			}
 		}
 	}
+
+	charra_log_info("[ TIME ] 	Validating Clains tooks %f secs", validate_claims/CLOCKS_PER_SEC);	
+	charra_log_info("[ TIME ] #4 appraiseEvidences tooks %f secs", total_func/CLOCKS_PER_SEC);
 
 	/* --- output result --- */
 
@@ -795,8 +947,13 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 	coap_optlist_t* coap_options)
 {
 	CHARRA_RC result = EXIT_FAILURE;
+	double total_func = 0;
+	double time_taken = 0 ;
+	clock_t t = 0;
 
- 	charra_log_trace("[" LOG_NAME "] Preparing ATTESTEATION RESULT for Attester (%d)", attestation_rp); 
+	charra_log_info("[ TIME ] #4 Sending Attestation Results to Attester");
+
+ 	// charra_log_trace("[" LOG_NAME "] Preparing ATTESTEATION RESULT for Attester (%d)", attestation_rp); 
 
 	char* attestationResult = NULL;
 	if (attestation_rc == 0) { 
@@ -807,16 +964,21 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
     
 	size_t signature_len = 0;
 	unsigned char signature[1024];
-	charra_log_info("[" LOG_NAME "] Sending attestatioResult [ %s ] to be signed ", attestationResult);
-	charra_log_info("[" LOG_NAME "] Private key path : [ %s ]", dtls_rpk_private_key_path);
+	// charra_log_info("[" LOG_NAME "] Sending attestatioResult [ %s ] to be signed ", attestationResult);
+	// charra_log_info("[" LOG_NAME "] Private key path : [ %s ]", dtls_rpk_private_key_path);
+
+	t = 0;
+	t = clock();
 
     if ((charra_sign_att_result(dtls_rpk_private_key_path, (unsigned char *) attestationResult, signature, &signature_len) != 0)) {
 		charra_log_error("[" LOG_NAME "] error signing attestation result.");
 		result = CHARRA_RC_CRYPTO_ERROR;
 		goto cleanup;
 	}
-	
-	charra_log_info("[" LOG_NAME "]  attestatioResult signed ");
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]	AttestatioResult signed tooks %f secs", time_taken);
 
 
 	/* This code can be used to verify if the signature is valid before marshal and send it to attester */
@@ -832,7 +994,8 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
  	
 	// }
 
-	charra_log_info ("[" LOG_NAME "]  Creating Appraisal Structure.");
+
+	// charra_log_info ("[" LOG_NAME "]  Creating Appraisal Structure.");
 	
     msg_attestation_appraise_result_dto att_result = {
 		.attestation_result_data_len = sizeof(attestationResult),
@@ -852,6 +1015,8 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 	/* create CoAP option for content type */
 	uint8_t coap_mediatype_cbor_buf2[4] = {0};
 	unsigned int coap_mediatype_cbor_buf_len2 = 0;
+	t = 0;
+	t = clock();
 	if ((coap_mediatype_cbor_buf_len2 = coap_encode_var_safe(
 			 coap_mediatype_cbor_buf2, sizeof(coap_mediatype_cbor_buf2),
 			 COAP_MEDIATYPE_APPLICATION_CBOR)) == 0) {
@@ -860,10 +1025,14 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]	Create CoAP option for content type tooks %f secs", time_taken);
 
 	/* create CoAP context */
 
-	charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
+	// charra_log_info("[" LOG_NAME "] Initializing CoAP in block-wise mode.");
 	if ((coap_context = charra_coap_new_context(true)) == NULL) {
 		charra_log_error("[" LOG_NAME "] Cannot create CoAP context.");
 		result = CHARRA_RC_COAP_ERROR;
@@ -871,19 +1040,27 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 	}
 
 	/* marshal attestation result */
-	charra_log_info(
-		"[" LOG_NAME "] Marshaling attestationResult data to CBOR.");
+	t = 0;
+	t = clock();
+	// charra_log_info(
+	// 	"[" LOG_NAME "] Marshaling attestationResult data to CBOR.");
 	if ((result = charra_marshal_attestation_result(
 			 &att_result, &ares_buf_len, &ares_buf)) != CHARRA_RC_SUCCESS) {
 		charra_log_error(
 			"[" LOG_NAME "] Marshaling attestation result data failed.");
 		goto cleanup;
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]	Marshaling attestationResult data to CBOR tooks %f secs", time_taken);
 
 	coap_optlist_t* coap_options2 = NULL;
 
 	/* CoAP options */
-	charra_log_info("[" LOG_NAME "] Adding CoAP option [result] to URI_PATH.");
+	// charra_log_info("[" LOG_NAME "] Adding CoAP option [result] to URI_PATH.");
+	t = 0;
+	t = clock();
 	if (coap_insert_optlist(
 			&coap_options2, coap_new_optlist(COAP_OPTION_URI_PATH, 6,
 							   (const uint8_t*)"result")) != 1) {
@@ -891,8 +1068,14 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]	Adding CoAP option [result] to URI_PATH tooks %f secs", time_taken);
 
-	charra_log_info("[" LOG_NAME "] Adding CoAP option [result] to CONTENT_TYPE.");
+	// charra_log_info("[" LOG_NAME "] Adding CoAP option [result] to CONTENT_TYPE.");
+	t = 0;
+	t = clock();
 	if (coap_insert_optlist(&coap_options2,
 			coap_new_optlist(COAP_OPTION_CONTENT_TYPE,
 				coap_mediatype_cbor_buf_len2, coap_mediatype_cbor_buf2)) != 1) {
@@ -900,9 +1083,15 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]	Adding CoAP option [result] to CONTENT_TYPE tooks %f secs", time_taken);
 
 	/* new CoAP request PDU */
-	charra_log_info("[" LOG_NAME "] Creating [result] PDU. ");
+	// charra_log_info("[" LOG_NAME "] Creating [result] PDU. ");
+	t = 0;
+	t = clock();
 	if ((pdu2 = charra_coap_new_request(coap_session, COAP_MESSAGE_TYPE_CON,
 			 COAP_REQUEST_FETCH, &coap_options2, ares_buf, ares_buf_len)) ==
 		NULL) {
@@ -910,19 +1099,32 @@ int send_attestation_results(CHARRA_RC attestation_rc, coap_session_t* coap_sess
 		result = CHARRA_RC_ERROR;
 		goto cleanup;
 	}
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]	Creating [result] PDU tooks %f secs", time_taken);
 
 	/* set timeout length */
 	coap_fixed_point_t coap_timeout2 = {attestation_response_timeout, 0};
 	coap_session_set_ack_timeout(coap_session, coap_timeout2);
 
 	/* send CoAP PDU */
-	charra_log_info("[" LOG_NAME "] Sending [result] CoAP message.");
+	// charra_log_info("[" LOG_NAME "] Sending [result] CoAP message.");
+	t = 0;
+	t = clock();
 	if ((mid2 = coap_send_large(coap_session, pdu2)) == COAP_INVALID_MID) {
 		charra_log_error("[" LOG_NAME "] Cannot send result CoAP message.");
 		result = CHARRA_RC_COAP_ERROR;
 		goto cleanup;
 	}
-	
+	t = clock() - t;
+	time_taken = ((double)t)/CLOCKS_PER_SEC;
+	total_func = total_func + (double)t;
+	charra_log_info("[ TIME ]	Sending [result] CoAP message tooks %f secs", time_taken);
+
+	charra_log_info("[ TIME ] #4 Sending Attestation Results to Attester tooks %f secs", total_func/CLOCKS_PER_SEC);
+
+
 	return CHARRA_RC_SUCCESS;
 
 cleanup:

@@ -99,7 +99,7 @@ int parse_command_line_arguments(int argc, char** argv, cli_config* variables) {
 			// ((caller == VERIFIER) ? verifier_options : attester_options),
 			// &index);
 
-        printf("identifier %d", identifier);
+        // printf("identifier %d", identifier);
 
 		if (identifier == -1)
 			return 0; // end of command line arguments reached
