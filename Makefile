@@ -148,3 +148,6 @@ cleanlibs: clean
 	$(MAKE) -C lib/ clean
 
 cleanall: cleanlibs clean
+
+version: 
+	$(CC) --version

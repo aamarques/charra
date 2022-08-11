@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
 	coap_set_log_level(coap_log_level);
 
 	charra_log_debug("[" LOG_NAME "] Relying Party Configuration:");
-	charra_log_info("[" LOG_NAME "]     Used local IP: %s", LISTEN_ADDRESS);
+	charra_log_debug("[" LOG_NAME "]     Used local IP: %s", LISTEN_ADDRESS);
 	charra_log_debug("[" LOG_NAME "]     Used local port: %d", port);
 	charra_log_debug("[" LOG_NAME "]     DTLS-PSK enabled: %s",
 		(use_dtls_psk == true) ? "true" : "false");
