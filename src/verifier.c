@@ -314,11 +314,11 @@ int main(int argc, char** argv) {
 	total_func = total_func + (double)t;
 
 	if (use_dtls_psk) {
-		charra_log_info("[ TIME ]	Create new COAP client session with Relying Party %f - COAP/DTLS-PSK", time_taken);
+		charra_log_info("[ TIME ]	Create new COAP client session with Attester %f - COAP/DTLS-PSK", time_taken);
 	} else if (use_dtls_rpk) {
-		charra_log_info("[ TIME ]	Create new COAP client session with Relying Party %f  - COAP/DTLS-RPK", time_taken);
+		charra_log_info("[ TIME ]	Create new COAP client session with Attester %f  - COAP/DTLS-RPK", time_taken);
 	} else {
-		charra_log_info("[ TIME ]	Create new COAP client session with Relying Party %f  - COAP/UDP", time_taken);
+		charra_log_info("[ TIME ]	Create new COAP client session with Attester %f  - COAP/UDP", time_taken);
 	}
 
 

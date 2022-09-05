@@ -281,13 +281,14 @@ int main(int argc, char** argv) {
 	time_taken = ((double)t)/CLOCKS_PER_SEC;
 	total_func = total_func + (double)t;
 
-	if (use_dtls_psk) {
-		charra_log_info("[ TIME ] Create new COAP client session with Relying Party %f - COAP/DTLS-PSK", time_taken);
-	} else if (use_dtls_rpk) {
-		charra_log_info("[ TIME ] Create new COAP client session with Relying Party %f  - COAP/DTLS-RPK", time_taken);
-	} else {
-		charra_log_info("[ TIME ] Create new COAP client session with Relying Party %f  - COAP/UDP", time_taken);
-	}
+	charra_log_info("[ TIME ] 	Registering CoAP resources 'attRes' tooks %f", time_taken);
+	// if (use_dtls_psk) {
+	// 	charra_log_info("[ TIME ] Create new COAP client session with Relying Party %f - COAP/DTLS-PSK", time_taken);
+	// } else if (use_dtls_rpk) {
+	// 	charra_log_info("[ TIME ] Create new COAP client session with Relying Party %f  - COAP/DTLS-RPK", time_taken);
+	// } else {
+	// 	charra_log_info("[ TIME ] Create new COAP client session with Relying Party %f  - COAP/UDP", time_taken);
+	// }
 
 
 	/* enter main loop */
@@ -349,7 +350,7 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 	size_t data_offset = 0;
 	size_t data_total_len = 0;
 
-	charra_log_info("[ TIME ] #5 Appraising Attestation Result recieved");
+	charra_log_info("[ TIME ] #6 Appraising Attestation Result recieved");
 	t = 0;
 	t = clock();
 	coap_r = coap_get_data_large(
@@ -403,7 +404,7 @@ static void coap_attest_result_handler(struct coap_context_t* context CHARRA_UNU
 	time_taken = ((double)t)/CLOCKS_PER_SEC;
 	charra_log_info("[ TIME ]	Verify signature tooks %f secs", time_taken);
 	total_func = total_func + (double)t;
-	charra_log_info("[ TIME ] #5 Appraising Attestation Result recieved tooks %f secs", total_func/CLOCKS_PER_SEC);
+	charra_log_info("[ TIME ] #6 Appraising Attestation Result recieved tooks %f secs", total_func/CLOCKS_PER_SEC);
 
 	// ## End of time call
 

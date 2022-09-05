@@ -293,13 +293,6 @@ int main(int argc, char** argv) {
 	total_func = total_func + (double)t;
 	charra_log_info("[ TIME ] 	Registering CoAP resources 'result' tooks %f", time_taken);
 
-	if (use_dtls_psk) {
-		charra_log_info("[ TIME ] #0 Initializing CoAP session with Relying Party %f - COAP/DTLS-PSK", total_func/CLOCKS_PER_SEC);
-	} else if (use_dtls_rpk) {
-		charra_log_info("[ TIME ] #0 Initializing CoAP session with Relying Party %f  - COAP/DTLS-RPK", total_func/CLOCKS_PER_SEC);
-	} else {
-		charra_log_info("[ TIME ] #0 Initializing CoAP session with Relying Party %f  - COAP/UDP", total_func/CLOCKS_PER_SEC);
-	}
 	total_func = 0;
 
 	/* enter main loop */

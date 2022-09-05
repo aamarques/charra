@@ -27,6 +27,7 @@ RUN apt-get update \
 	&& apt-get install --no-install-recommends -y \
 	man-db \
 	bash-completion \
+  sysstat \
 	&& rm -rf /var/lib/apt/lists/*
 RUN yes | unminimize
 
